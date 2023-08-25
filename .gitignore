@@ -1,0 +1,27 @@
+HELP.md
+
+### VS Code ###
+.vscode/
+
+*.db
+
+venv
+.venv
+
+*.log
+__pycache__
+
+*.log
+
+.idea
+
+
+
+build
+install
+log
+
+!logs/*.py
+
+*-amr-002.yaml
+robo_msgs
