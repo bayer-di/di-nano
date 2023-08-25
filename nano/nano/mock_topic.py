@@ -61,7 +61,7 @@ class Mocker:
         p = []
         for a in [[39.62, 35.73], [40.62, 35.73], [39.62, 40.73], [42.62, 33.73], [33.33, 33.73]]:
             px = Point()
-            px.node_id= f"{uuid4()}"
+            px.node_id= 'G1002'
             px.x = a[0]
             px.y = a[1]
             px.yaw = random.randint(0, 360) * 1.1
@@ -90,8 +90,8 @@ class Mocker:
 
     def gen_err_arr(self):
         error_msgs = []
-        em = self.gen_err_item()
-        error_msgs.append(em)
+        # em = self.gen_err_item()
+        # error_msgs.append(em)
         return error_msgs
 
 
