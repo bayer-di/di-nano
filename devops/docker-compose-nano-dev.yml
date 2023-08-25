@@ -1,0 +1,23 @@
+---
+version: "3.9"
+
+services:
+  nano_dev:
+    container_name: nano_dev
+    build:
+      context: .
+      dockerfile: nano.dev.dockerfile
+    image: nano:dev
+    ports:
+      - 8001:8001
+    restart: always
+    volumes:
+      - ./..:/root/workspaces/src
+    environment:
+      - TZ=Asia/Shanghai
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 1
+...

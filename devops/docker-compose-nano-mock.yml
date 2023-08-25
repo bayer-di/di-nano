@@ -1,0 +1,16 @@
+---
+version: "3.9"
+
+services:
+  nano_mock:
+    container_name: nano_mock
+    image: registry.cn-hangzhou.aliyuncs.com/bayer-di-pub/nano:V1.0.4
+    restart: always
+    environment:
+      - TZ=Asia/Shanghai
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 1
+...
