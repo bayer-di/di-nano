@@ -63,7 +63,7 @@ class NanoNode(Node):
 
         self.ros_sub_init()
 
-        # self.mock_init()
+        self.mock_init()
 
     def mock_init(self):
         """模拟ROS TOPIC"""

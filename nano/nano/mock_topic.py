@@ -11,6 +11,7 @@ Mock Ros Topic
 
 import random
 import json
+import time
 from uuid import uuid4
 from std_msgs.msg import String
 from agv_msgs.msg import BatteryInfoMsg
@@ -61,7 +62,7 @@ class Mocker:
         p = []
         for a in [[39.62, 35.73], [40.62, 35.73], [39.62, 40.73], [42.62, 33.73], [33.33, 33.73]]:
             px = Point()
-            px.node_id= 'G1002'
+            px.node_id= 'G1003'
             px.x = a[0]
             px.y = a[1]
             px.yaw = random.randint(0, 360) * 1.1
@@ -117,4 +118,8 @@ class Mocker:
             "task_finish": 1 if event_type == 0 else 2,
             "results":[]
         }
-        return json.dumps(mock_resp)
+        if event_type == 0:
+            time.sleep(60)
+        s = String()
+        s.data = json.dumps(mock_resp)
+        return s
