@@ -78,7 +78,7 @@ class NanoNode(Node):
         self.timer_mocker_status = self.create_timer(1, partial(self.mocker_status_callback))
         self.timer_mocker_battery = self.create_timer(5, partial(self.mocker_battery_callback))
         self.timer_mocker_faults = self.create_timer(1, partial(self.mocker_faults_callback))
-        self.timer_mocker_ping = self.create_timer(1, partial(self.mocker_ping_callback))
+        self.timer_mocker_ping = self.create_timer(0.5, partial(self.mocker_ping_callback))
 
         self.mock_subscribers = {}
         self.mock_subscribers['/deploy_task'] = self.create_subscription(String, '/deploy_task', self.mocker_deploy_task_callback, qos_profile=self.qos)
@@ -88,7 +88,8 @@ class NanoNode(Node):
         from .mock_topic import Mocker
         mocker = Mocker()
         resp = mocker.consume(msg.data)
-        self.mock_publishers['/task/total_task_report'].publish(resp)
+        if resp:
+            self.mock_publishers['/task/total_task_report'].publish(resp)
 
 
     def mocker_status_callback(self):
