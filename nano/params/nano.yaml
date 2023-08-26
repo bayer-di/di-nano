@@ -1,35 +1,13 @@
-# 应用名称
+#COMMON 配置
 name: nano
-
-# 版本
 version: 1.0.0
-
-# FastAPI端口
 port: 8001
-
-# 设备编号
-device_no: test
-task_label: patrol
-
-# 环境, 默认开发环境(关闭 redoc / swagger / debug)
-# production or development
-environment: development
-
-# 日志级别与地址
-# DEBUG 、INFO、 WARNING OR WARN 、ERROR
-log_level: INFO 
-sys_log_file: logs/nano_biz.log
-access_log_file: logs/nano_access.log
-
-# 地图约定路径
-maps_path: /home/map/
-# 路网存储路径
-road_path: /home/road/
-
-# MQTT配置
+device_no: test # 设备编号
+task_label: patrol # 业务LABEL
+environment: development # production or development
 mqtt: 
   local:
-    host: 127.0.0.1gi
+    host: 127.0.0.1
     port: 1883
     username: ''
     password: ''
@@ -38,3 +16,12 @@ mqtt:
     port: ''
     username: ''
     password: ''
+
+# 日志配置
+log_level: INFO # DEBUG 、INFO、 WARNING OR WARN 、ERROR
+sys_log_file: logs/nano_biz.log
+access_log_file: logs/nano_access.log
+
+# 地图与路网约定配置
+maps_path: /home/map/
+road_path: /home/road/
