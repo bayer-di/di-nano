@@ -8,7 +8,6 @@
 from fastapi import FastAPI
 
 from .caches.global_cache import nano_setting_cache
-from .config import get_configs
 from .exception import init_exception_handler
 from .logs import sys_log, init_log
 from .middleware import init_middleware
@@ -20,9 +19,7 @@ def create_app() -> FastAPI:
     """
     该方法用于初始化和创建 FASTAPI
     """
-    conf = get_configs()
-
-    nano_setting_cache['obj'] = conf
+    conf = nano_setting_cache['obj']
 
     # 初始化日志
     init_log(conf=conf)

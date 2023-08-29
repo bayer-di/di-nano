@@ -56,8 +56,6 @@ class NanoNode(Node):
 
         self.qos = rclpy.qos.QoSProfile(depth=10)
 
-        self.node_start()
-
     def node_start(self):
 
         self.ros_pub_init()
