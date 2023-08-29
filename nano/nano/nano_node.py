@@ -121,6 +121,7 @@ class NanoNode(Node):
         """ros topic 的 发布缓存"""
         # TODO: 创建发布器 
         self.cache_publishers['/deploy_task'] = self.create_publisher(String, '/deploy_task', qos_profile=qos_profile_services_default)
+        self.cache_publishers['/road_network'] = self.create_publisher(String, '/road_network', qos_profile=qos_profile_services_default)
         self.cache_publishers['/pong'] = self.create_publisher(String, '/pong', qos_profile=self.qos)
 
     def ros_sub_init(self):
@@ -186,6 +187,9 @@ class NanoNode(Node):
                     read_to_upload(url=url, version=version)
                 else:
                     download_to_save(url=url, version=version)
+                    version_msg = String()
+                    version_msg.data = version
+                    self.cache_publishers['/road_network'].publish(version_msg)
 
         if cmd_type in [CmdType.deploy_task.value, CmdType.ctrl.value, CmdType.pong.value]:
             ros_msg = String()
