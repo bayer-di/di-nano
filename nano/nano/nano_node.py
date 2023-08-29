@@ -20,6 +20,7 @@ from std_msgs.msg import String, Header
 from agv_msgs.msg import BatteryInfoMsg
 from device_msgs.msg import RoboStatus, ErrorStatus
 from rosidl_runtime_py import message_to_ordereddict
+from rclpy.qos import qos_profile_services_default
 
 from .core.convert.msg_convert import convert_to_mqtt_pack
 from .core.schemas.message import CmdType
@@ -77,7 +78,7 @@ class NanoNode(Node):
 
         self.timer_mocker_status = self.create_timer(1, partial(self.mocker_status_callback))
         self.timer_mocker_battery = self.create_timer(5, partial(self.mocker_battery_callback))
-        self.timer_mocker_faults = self.create_timer(1, partial(self.mocker_faults_callback))
+        # self.timer_mocker_faults = self.create_timer(1, partial(self.mocker_faults_callback))
         self.timer_mocker_ping = self.create_timer(0.5, partial(self.mocker_ping_callback))
 
         self.mock_subscribers = {}
@@ -119,7 +120,7 @@ class NanoNode(Node):
     def ros_pub_init(self):
         """ros topic 的 发布缓存"""
         # TODO: 创建发布器 
-        self.cache_publishers['/deploy_task'] = self.create_publisher(String, '/deploy_task', qos_profile=self.qos)
+        self.cache_publishers['/deploy_task'] = self.create_publisher(String, '/deploy_task', qos_profile=qos_profile_services_default)
         self.cache_publishers['/pong'] = self.create_publisher(String, '/pong', qos_profile=self.qos)
 
     def ros_sub_init(self):
