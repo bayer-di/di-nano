@@ -28,7 +28,8 @@ from .core.logs import sys_log
 from .core.mqtt import async_all_publish
 from .core.utils import load_params_yaml
 from .core.fileproc import read_to_upload, download_to_save
-
+from .core.config import get_configs
+from .core.caches.global_cache import nano_setting_cache
 
 class NanoNode(Node):
     """Nano Node"""
@@ -38,6 +39,7 @@ class NanoNode(Node):
 
         # 获取默认配置的路径
         def_conf_path = f"{get_package_share_directory('nano')}/nano.yaml"
+
         self.declare_parameter('conf_file', def_conf_path)
         # 优先从命令行参数中获取
         self.conf_file = self.get_parameter('conf_file').get_parameter_value().string_value
@@ -45,8 +47,12 @@ class NanoNode(Node):
         # 解析配置文件
         print(f"....加载配置文件:{self.conf_file}")
         self.conf_data = load_params_yaml(self.conf_file)
-
         self.port = self.conf_data['port']
+       
+        self.conf = get_configs(f=self.conf_file)   
+        nano_setting_cache['obj'] = self.conf
+
+        
         self.cache_publishers = {}
         self.cache_subscribers = {}
 
@@ -55,6 +61,8 @@ class NanoNode(Node):
         self.get_logger().info(f"启动参数: {json.dumps(self.conf_data, indent=4)}")
 
         self.qos = rclpy.qos.QoSProfile(depth=10)
+        
+        self.node_start()
 
     def node_start(self):
 
@@ -184,10 +192,12 @@ class NanoNode(Node):
                 if cmd_type == CmdType.maps_updated.value:
                     read_to_upload(url=url, version=version)
                 else:
-                    download_to_save(url=url, version=version)
-                    version_msg = String()
-                    version_msg.data = version
-                    self.cache_publishers['/road_network'].publish(version_msg)
+                    need_publish = download_to_save(url=url, version=version)
+                    if need_publish:
+                        version_msg = String()
+                        version_msg.data = str(version)
+                        self.cache_publishers['/road_network'].publish(version_msg)
+                    
 
         if cmd_type in [CmdType.deploy_task.value, CmdType.ctrl.value, CmdType.pong.value]:
             ros_msg = String()

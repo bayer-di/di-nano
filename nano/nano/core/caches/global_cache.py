@@ -15,10 +15,6 @@ ROS2 Node 对象缓存, 运行中使用, key in ['nano']
 """
 nano_node_cache = {}
 
-"""
-ros2 参数传入的 配置文件缓存地址, 与读取的数据字典, 供给 fastapi 启动的时候使用, key in ['file'], ['dict_data']
-"""
-nano_conf_cache = {}
 
 """
 ros2 参数后，解析后缓存的 配置对象, 供给 fastapi 启动的时候使用, key in ['obj']

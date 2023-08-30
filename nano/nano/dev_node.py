@@ -11,7 +11,7 @@
 import os
 import json
 
-from core.caches.global_cache import nano_node_cache, nano_conf_cache
+from core.caches.global_cache import nano_node_cache
 from core.utils import load_params_yaml
 
 
@@ -45,8 +45,6 @@ def uvicorn_run(port: int):
 def main(args=None):
     nano_node = NanoServer()
     nano_node_cache['node'] = nano_node
-    nano_conf_cache['file'] = nano_node.conf_file
-    nano_conf_cache['dict_data'] = nano_node.conf_data
 
     uvicorn_run(nano_node.port)
 

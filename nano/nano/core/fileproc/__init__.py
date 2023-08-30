@@ -14,7 +14,7 @@ from ..logs import sys_log
 from ..utils import load_params_yaml
 
 
-def download_to_save(url: str, version: Optional[str] = None):
+def download_to_save(url: str, version: Optional[str] = None) -> bool:
     """下载"""
     dir_path = nano_setting_cache['obj'].road_path
     os.makedirs(dir_path, exist_ok=True)
@@ -24,7 +24,7 @@ def download_to_save(url: str, version: Optional[str] = None):
         with open(v_file_path, 'r') as f:
             _version = f.read()
             if _version and version and str(version) == str(_version):
-                return
+                return False
 
     try:
         response = requests.get(url=url, timeout=5, verify=False)
@@ -46,10 +46,12 @@ def download_to_save(url: str, version: Optional[str] = None):
             f.write(str(version).encode('utf-8'))  # type: ignore
 
         sys_log.info(f"下载路网成功 {file_path} 版本{version}")
+        return True
     except requests.exceptions.Timeout:
         sys_log.error(f"下载路网超时 {url}")
     except requests.exceptions.RequestException as e:
         sys_log.error(f"下载路网错误 {url}", e)
+    return False
 
 
 def read_to_upload(url: str, version: Optional[str] = None):

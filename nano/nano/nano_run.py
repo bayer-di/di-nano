@@ -14,7 +14,7 @@ import threading
 import uvicorn
 
 from .core import create_app
-from .core.caches.global_cache import nano_node_cache, nano_conf_cache, nano_setting_cache
+from .core.caches.global_cache import nano_node_cache
 from .nano_node import NanoNode
 
 app = create_app
@@ -36,13 +36,6 @@ def main(args=None):
 
     nano_node = NanoNode()
     nano_node_cache['node'] = nano_node
-    nano_conf_cache['file'] = nano_node.conf_file
-    nano_conf_cache['dict_data'] = nano_node.conf_data
-    from .core.config import get_configs
-    conf = get_configs()
-    nano_setting_cache['obj'] = conf
-
-    nano_node.node_start()
     
     spin_thread = threading.Thread(target=rclpy.spin, args=(nano_node,))
     spin_thread.start()

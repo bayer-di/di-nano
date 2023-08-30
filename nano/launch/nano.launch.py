@@ -5,30 +5,28 @@
 @Software: 代理ROS2数据、指令到MQTT应用
 """
 
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
-from yaml import safe_load
+from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    params_file = get_package_share_directory("nano") + '/nano.yaml'
 
+    def_conf_path = f"{get_package_share_directory('nano')}/nano-amr-002.yaml"
     ld = LaunchDescription()
 
     condition = IfCondition(LaunchConfiguration('start'))
-
-    with open(params_file, 'r') as f:
-        params = safe_load(f)
 
     nano_node = Node(
         package="nano",
         executable="nano",
         name="nano",
         output='screen',
-        parameters=[params],
+        parameters=[
+            { 'conf_file': def_conf_path}
+        ],
         condition=condition
     )
 

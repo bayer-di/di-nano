@@ -10,7 +10,6 @@ from pydantic import BaseSettings, Field
 from typing import Optional, ClassVar
 from yaml import safe_load
 
-from ..caches.global_cache import nano_conf_cache
 from ..utils import get_file_absolute_path
 
 
@@ -68,10 +67,9 @@ class FactoryConfig:
 
 
 @lru_cache
-def get_configs():
+def get_configs(f: str):
     """加载一下环境文件"""
-    conf_data = nano_conf_cache['dict_data']
-    if not conf_data:
-        with open(get_file_absolute_path(nano_conf_cache['file']), 'r') as file:
-            conf_data = safe_load(file)
-    return FactoryConfig(conf_data=conf_data)()
+    print(f"加载一下环境文件 {f}")
+    with open(get_file_absolute_path(f), 'r') as file:  
+        m = safe_load(file)
+        return FactoryConfig(conf_data=m)()
