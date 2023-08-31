@@ -25,7 +25,7 @@ def generate_launch_description():
         name="nano",
         output='screen',
         parameters=[
-            { 'conf_file': def_conf_path}
+            {'conf_file': def_conf_path}
         ],
         condition=condition
     )
