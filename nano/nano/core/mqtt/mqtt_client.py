@@ -79,5 +79,6 @@ class FastMQTTClient:
         if self.mqtt.client.is_connected and self.mqtt.client._is_active:
             self.mqtt.publish(topic, msg, qos)
         else:
+            self.mqtt.client.reconnect(delay=False)
             sys_log.error(f'MQTT已经断链.....重连ING')
             

@@ -68,7 +68,7 @@ def _get_mqtt_config(mqtt_info: MqttInfo, client_id: str, device_no: str) -> MQT
         username=mqtt_info.username,
         password=mqtt_info.password,
         version=MQTTv311,
-        keepalive=60,
+        keepalive=10,
         reconnect_retries=-1,
         reconnect_delay=1,
     )
