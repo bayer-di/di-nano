@@ -51,6 +51,8 @@ def download_to_save(url: str, version: Optional[str] = None) -> bool:
         sys_log.error(f"下载路网超时 {url}")
     except requests.exceptions.RequestException as e:
         sys_log.error(f"下载路网错误 {url}", e)
+    except Exception as e:
+        sys_log.error(f"下载路网错误 {url}", e)
     return False
 
 
@@ -84,6 +86,8 @@ def read_to_upload(url: str, version: Optional[str] = None):
         except requests.exceptions.Timeout:
             sys_log.error(f"上传地图超时 {file_names}")
         except requests.exceptions.RequestException as e:
+            sys_log.error(f"上传地图错误 {file_names}", e)
+        except Exception as e:
             sys_log.error(f"上传地图错误 {file_names}", e)
     else:
         sys_log.warn(f"本地无地图文件")
