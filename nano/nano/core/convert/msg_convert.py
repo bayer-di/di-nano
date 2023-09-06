@@ -14,36 +14,36 @@ from ..schemas.mqtt_msg import MqttMsgReq
 from ..schemas.nano_exception import NanoException
 
 """
-ros to mqtt topic 映射, 定制好后不会再变化 {ros_topic: mqtt_attr}
+ros to mqtt topic 映射, 定制好后不会再变化 {ros_topic: [mqtt_attr, mqtt_topic, 需要多次发送的次数]}
 """
 ros_2_mqtt_topic_map = {
     # 心跳
-    '/ping': [MessageType.ping.value, 'ping'],
+    '/ping': [MessageType.ping.value, 'ping', 1],
 
-    '/cmd_ack': [MessageType.cmd_ack.value, 'cmd_ack'],
+    '/cmd_ack': [MessageType.cmd_ack.value, 'cmd_ack', 1],
 
     # agv 状态 & 电量
-    '/robo_status': [MessageType.robo_status.value, 'robo_status'],
+    '/robo_status': [MessageType.robo_status.value, 'robo_status', 1],
 
     # agv 电量
-    '/battery_info': [MessageType.battery_info.value, 'battery_info'],
+    '/battery_info': [MessageType.battery_info.value, 'battery_info', 1],
 
     # agv 故障
-    '/robo_faults': [MessageType.robo_faults.value, 'robo_faults'],
+    '/robo_faults': [MessageType.robo_faults.value, 'robo_faults', 1],
 
     # 子任务
-    '/task/sub_task_report': [MessageType.sub_task_report.value, 'sub_task_report'],
+    '/task/sub_task_report': [MessageType.sub_task_report.value, 'sub_task_report', 3],
 
     # 总任务 
-    '/task/total_task_report': [MessageType.total_task_report.value, 'total_task_report'],
+    '/task/total_task_report': [MessageType.total_task_report.value, 'total_task_report', 3],
 
     # 产量检测
-    '/res_yield_calculate': [MessageType.res_yield_calculate.value, 'res_yield_calculate']
+    '/res_yield_calculate': [MessageType.res_yield_calculate.value, 'res_yield_calculate', 3]
 
 }
 
 """
-mqtt to ros topic 映射, 定制好后不会再变化 {mqtt_topic_cmd_name: ros_attr}
+mqtt to ros topic 映射, 定制好后不会再变化 {mqtt_topic_cmd_name: [ros_attr, ros_topic, 是否需要ACK]}
 """
 mqtt_2_ros_topic_map = {
 
@@ -89,5 +89,5 @@ def convert_to_mqtt_pack(ros_topic: str, trace_id: str, data: any) -> MqttMsgReq
         # TODO: 根据消息构建数据
         agv_up_msg = AgvUpMsg(trace_id=trace_id, device_no=device_no, msg_type=msg_type, data=data,
                               ts=int(time.time() * 1000))
-        return MqttMsgReq(topic=mqtt_topic, msg=json.dumps(agv_up_msg.dict()))
+        return MqttMsgReq(topic=mqtt_topic, msg=json.dumps(agv_up_msg.dict())), d[2]
     raise NanoException(detail='转换MQTT消息错误')

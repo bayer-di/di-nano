@@ -30,5 +30,5 @@ async def cmd_process(client: Client, client_id: str, topic: str, msg: str, qos:
 
 def _cmd_ack(client: Client, json_data: dict):
     if 'trace_id' in json_data:
-        cmd_ack_msg = convert_to_mqtt_pack(ros_topic='/cmd_ack', trace_id=json_data['trace_id'], data=json.dumps(json_data))
+        cmd_ack_msg, _ = convert_to_mqtt_pack(ros_topic='/cmd_ack', trace_id=json_data['trace_id'], data=json.dumps(json_data))
         client.publish(cmd_ack_msg.topic, cmd_ack_msg.msg, cmd_ack_msg.qos) # type: ignore
