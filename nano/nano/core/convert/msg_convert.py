@@ -32,7 +32,7 @@ ros_2_mqtt_topic_map = {
     '/robo_faults': [MessageType.robo_faults.value, 'robo_faults', 1],
 
     # 子任务
-    '/task/sub_task_report': [MessageType.sub_task_report.value, 'sub_task_report', 3],
+    '/task/sub_task_report': [MessageType.sub_task_report.value, 'sub_task_report', 1],
 
     # 总任务 
     '/task/total_task_report': [MessageType.total_task_report.value, 'total_task_report', 3],
