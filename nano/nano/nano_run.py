@@ -10,6 +10,7 @@
 """
 
 import rclpy
+import signal
 import threading
 import uvicorn
 
@@ -20,14 +21,23 @@ from .nano_node import NanoNode
 app = create_app
 
 
+
+
+
 def uvicorn_run(port: int):
-    """运行方法"""
-    uvicorn.run(
-        app=app,
-        host='0.0.0.0',
-        port=port,
-        factory=True
-    )
+
+    try:
+        """运行方法"""
+        uvicorn.run(
+            app=app,
+            host='0.0.0.0',
+            port=port,
+            factory=True
+        )
+
+    except Exception as e:
+        print("FastAPI启动发生异常:", str(e))
+
 
 
 def main(args=None):
@@ -36,14 +46,27 @@ def main(args=None):
 
     nano_node = NanoNode()
     nano_node_cache['node'] = nano_node
-    
-    spin_thread = threading.Thread(target=rclpy.spin, args=(nano_node,))
-    spin_thread.start()
-    try:
-        uvicorn_run(nano_node.port)
-    except Exception as e:
-        print("start fastapi and mqtt client failed ...", str(e))
 
+  
+    # spin_thread = threading.Thread(target=rclpy.spin, args=(nano_node,))
+    # spin_thread.start()
+    # rclpy.spin(nano_node)
+
+    import concurrent.futures
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.submit(uvicorn_run, nano_node.port)
+        executor.submit(rclpy.spin(nano_node))
+
+    
+
+    # my_thread = threading.Thread(target=uvicorn_run, args=(nano_node.port,), daemon=True)
+    # my_thread.start()
+
+    # rclpy.spin(nano_node)
+    # uvicorn_run(nano_node.port)
+    
+
+    # my_thread.join()
     rclpy.shutdown()
 
 
