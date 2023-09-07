@@ -159,11 +159,12 @@ class NanoNode(Node):
         trace_id = msg_dict['trace_id'] if 'trace_id' in msg_dict else f'{uuid4()}'
         data = json.dumps(msg_dict)
         mqtt_msg, _ = convert_to_mqtt_pack(ros_topic=ros_topic, trace_id=trace_id, data=data)
-        sys_log.info(
-            f"ROS 消息触发回调, 向 MQTT 发送消息, roseTopic:{ros_topic} => mqttTopic:{mqtt_msg.topic}, 消息内容: {data}")
-        for idx in range(_):
-            import asyncio
-            asyncio.run(async_all_publish(mqtt_msg))
+        if mqtt_msg:
+            sys_log.info(
+                f"ROS 消息触发回调, 向 MQTT 发送消息, roseTopic:{ros_topic} => mqttTopic:{mqtt_msg.topic}, 消息内容: {data}")
+            for idx in range(_):
+                import asyncio
+                asyncio.run(async_all_publish(mqtt_msg))
 
     def ping_callback(self, msg):
         self._ros2_to_mqtt(ros_topic='/ping', msg=msg)

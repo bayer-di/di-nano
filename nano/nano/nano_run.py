@@ -39,17 +39,10 @@ def main(args=None):
     
     spin_thread = threading.Thread(target=rclpy.spin, args=(nano_node,))
     spin_thread.start()
-    uvicorn_run(nano_node.port)
-  
-
-    # from rclpy.executors import MultiThreadedExecutor
-    # executor = MultiThreadedExecutor()
-    # executor.add_node(nano_node)
-    # thread = threading.Thread(target=web_server_run)
-    # thread.start()
-    # 在主线程中运行事件循环
-    # executor.spin()
-    # thread.join()
+    try:
+        uvicorn_run(nano_node.port)
+    except Exception as e:
+        print("start fastapi and mqtt client failed ...", str(e))
 
     rclpy.shutdown()
 

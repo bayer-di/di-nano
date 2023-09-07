@@ -11,7 +11,6 @@ from ..caches.global_cache import nano_setting_cache
 from ..schemas.message import AgvUpMsg
 from ..schemas.message import MessageType, CmdType
 from ..schemas.mqtt_msg import MqttMsgReq
-from ..schemas.nano_exception import NanoException
 
 """
 ros to mqtt topic 映射, 定制好后不会再变化 {ros_topic: [mqtt_attr, mqtt_topic, 需要多次发送的次数]}
@@ -75,10 +74,9 @@ def convert_to_ros_pack(mqtt_topic: str, data: any) -> any:  # type: ignore
         d = mqtt_2_ros_topic_map[cmd_name]
         # cmd_type, ros_topic, need_ack, data, cmd_name
         return d[0], d[1], d[2], data, cmd_name
-    raise NanoException(detail='转换ROS消息错误')
 
 
-def convert_to_mqtt_pack(ros_topic: str, trace_id: str, data: any) -> MqttMsgReq:  # type: ignore
+def convert_to_mqtt_pack(ros_topic: str, trace_id: str, data: any) -> [MqttMsgReq, int]:  # type: ignore
     d = ros_2_mqtt_topic_map[ros_topic]
     """/nano/{env}/up/{device_no}/{topic_name}"""
     if d:
@@ -90,4 +88,3 @@ def convert_to_mqtt_pack(ros_topic: str, trace_id: str, data: any) -> MqttMsgReq
         agv_up_msg = AgvUpMsg(trace_id=trace_id, device_no=device_no, msg_type=msg_type, data=data,
                               ts=int(time.time() * 1000))
         return MqttMsgReq(topic=mqtt_topic, msg=json.dumps(agv_up_msg.dict())), d[2]
-    raise NanoException(detail='转换MQTT消息错误')
