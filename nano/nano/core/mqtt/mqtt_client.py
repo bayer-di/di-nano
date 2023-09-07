@@ -13,7 +13,7 @@ from ..schemas.nano_exception import NanoException
 from ..logs import sys_log
 
 
-class FastMQTTClient:
+class NanoMQTTClient:
     """MQTT Client"""
 
     def __init__(self,
@@ -43,6 +43,7 @@ class FastMQTTClient:
             port=mqtt_config['port'],
             keepalive=mqtt_config['keepalived'])
     
+        
         self.mqtt = client
 
         self.mqtt.loop_start()
@@ -95,3 +96,11 @@ class FastMQTTClient:
         else:
             sys_log.error(f"MQTT已经断链.....重连ING")
             
+
+    def _is_ip(self, host:str) -> bool:
+        import ipaddress
+        try:
+            ipaddress.ip_address(host)
+            return True
+        except ValueError:
+            return False

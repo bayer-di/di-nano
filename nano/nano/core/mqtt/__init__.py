@@ -11,7 +11,7 @@ from uuid import uuid4
 
 
 
-from .mqtt_client import FastMQTTClient
+from .mqtt_client import NanoMQTTClient
 from ..caches.global_cache import mqtt_client_cache
 from ..command.cmd_down import cmd_process
 from ..config import Settings, MqttInfo
@@ -44,7 +44,7 @@ def _start_mqtt_client(mqtt_info: MqttInfo, conf: Settings, client_id: str):
     if mqtt_info and mqtt_info.host and mqtt_info.port:
         print(f"开启 MQTT 链接, {mqtt_info.host}:{mqtt_info.port}, client_id: {client_id}, topic: {cmd_mqtt_topic}")
         sys_log.info(f"开启 MQTT 链接, {mqtt_info.host}:{mqtt_info.port}, client_id: {client_id}, topic: {cmd_mqtt_topic}")
-        return FastMQTTClient(
+        return NanoMQTTClient(
             client_id=client_id,
             qos=1,
             topics=[cmd_mqtt_topic],
@@ -66,7 +66,7 @@ def _get_online_msg(device_no: str, task_label: str) -> str:
     return json.dumps({'client_id': device_no, 'msg_type': 'device_online', 'data': task_label})
 
 
-def _get_mqtt_client(key: str) -> FastMQTTClient:
+def _get_mqtt_client(key: str) -> NanoMQTTClient:
     """获取客户端"""
     if key and key in mqtt_client_cache:
         return mqtt_client_cache[key]
