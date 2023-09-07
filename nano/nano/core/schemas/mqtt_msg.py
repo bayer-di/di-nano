@@ -6,7 +6,6 @@
 """
 
 from enum import Enum, unique
-from gmqtt.mqtt.constants import SubAckReasonCode
 from pydantic import BaseModel
 from typing import Union
 
@@ -22,5 +21,5 @@ class MqttMsgReq(BaseModel):
     """消息类"""
     topic: str
     msg: str
-    qos: int = SubAckReasonCode.QOS1
+    qos: int = 1
     client: Union[str, None] = None

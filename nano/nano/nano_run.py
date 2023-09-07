@@ -10,33 +10,10 @@
 """
 
 import rclpy
-import signal
-import threading
-import uvicorn
 
 from .core import create_app
 from .core.caches.global_cache import nano_node_cache
 from .nano_node import NanoNode
-
-app = create_app
-
-
-
-
-
-def uvicorn_run(port: int):
-
-    try:
-        """运行方法"""
-        uvicorn.run(
-            app=app,
-            host='0.0.0.0',
-            port=port,
-            factory=True
-        )
-
-    except Exception as e:
-        print("FastAPI启动发生异常:", str(e))
 
 
 
@@ -52,10 +29,10 @@ def main(args=None):
     # spin_thread.start()
     # rclpy.spin(nano_node)
 
-    import concurrent.futures
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.submit(uvicorn_run, nano_node.port)
-        executor.submit(rclpy.spin(nano_node))
+    # import concurrent.futures
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     executor.submit(uvicorn_run, nano_node.port)
+    #     executor.submit(rclpy.spin(nano_node))
 
     
 
@@ -67,6 +44,10 @@ def main(args=None):
     
 
     # my_thread.join()
+
+    create_app()
+
+    rclpy.spin(nano_node)
     rclpy.shutdown()
 
 

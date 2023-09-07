@@ -1,7 +1,6 @@
 #COMMON 配置
 name: nano
 version: 1.0.0
-port: 8001
 device_no: test # 设备编号
 task_label: patrol # 业务LABEL
 environment: development # production or development
@@ -20,7 +19,6 @@ mqtt:
 # 日志配置
 log_level: INFO # DEBUG 、INFO、 WARNING OR WARN 、ERROR
 sys_log_file: logs/nano_biz.log
-access_log_file: logs/nano_access.log
 
 # 地图与路网约定配置
 maps_path: /home/map/

@@ -11,9 +11,10 @@
 import os
 import json
 
-from core.caches.global_cache import nano_node_cache
+from core.caches.global_cache import nano_node_cache, nano_setting_cache
 from core.utils import load_params_yaml
-
+from core import create_app
+from core.config import get_configs
 
 class NanoServer:
 
@@ -23,30 +24,18 @@ class NanoServer:
         self.conf_file = os.path.join(os.getcwd(), 'nano/params/nano.yaml')
 
         self.conf_data = load_params_yaml(self.conf_file)
-        self.port = self.conf_data['port']
+        
+        self.conf = get_configs(f=self.conf_file)   
+        nano_setting_cache['obj'] = self.conf
         print(f"配置文件路径: {self.conf_file}")
-        print(f"FastAPI端口: {self.port}")
         print(f"启动参数: {json.dumps(self.conf_data, indent=4)}")
-
-
-def uvicorn_run(port: int):
-    """运行方法"""
-    from core import create_app
-    import uvicorn
-    app = create_app
-    uvicorn.run(
-        app=app,
-        host='0.0.0.0',
-        port=port,
-        factory=True
-    )
 
 
 def main(args=None):
     nano_node = NanoServer()
     nano_node_cache['node'] = nano_node
 
-    uvicorn_run(nano_node.port)
+    create_app()
 
 
 if __name__ == '__main__':

@@ -35,8 +35,6 @@ class Settings(BaseSettings):
 
     version: str = Field(..., env='version')
 
-    port: str = Field(..., env='port')
-
     device_no: str = Field(..., env='device_no')
 
     task_label: str = Field(..., env='task_label')
@@ -46,8 +44,6 @@ class Settings(BaseSettings):
     log_level: str = Field(..., env='log_level')
 
     sys_log_file: str = Field(..., env='sys_log_file')
-
-    access_log_file: str = Field(..., env='access_log_file')
 
     maps_path: str = Field(..., env='maps_path')
     
@@ -69,7 +65,6 @@ class FactoryConfig:
 @lru_cache
 def get_configs(f: str):
     """加载一下环境文件"""
-    print(f"加载一下环境文件 {f}")
     with open(get_file_absolute_path(f), 'r') as file:  
         m = safe_load(file)
         return FactoryConfig(conf_data=m)()

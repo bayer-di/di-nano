@@ -47,7 +47,6 @@ class NanoNode(Node):
         # 解析配置文件
         print(f"....加载配置文件:{self.conf_file}")
         self.conf_data = load_params_yaml(self.conf_file)
-        self.port = self.conf_data['port']
        
         self.conf = get_configs(f=self.conf_file)   
         nano_setting_cache['obj'] = self.conf
@@ -57,7 +56,6 @@ class NanoNode(Node):
         self.cache_subscribers = {}
 
         self.get_logger().info(f"配置文件路径: {self.conf_file}")
-        self.get_logger().info(f"FastAPI端口: {self.port}")
         self.get_logger().info(f"启动参数: {json.dumps(self.conf_data, indent=4)}")
 
         self.qos = rclpy.qos.QoSProfile(depth=10)
@@ -70,7 +68,7 @@ class NanoNode(Node):
 
         self.ros_sub_init()
 
-        # self.mock_init()
+        self.mock_init()
 
     def mock_init(self):
         """模拟ROS TOPIC"""
@@ -84,7 +82,7 @@ class NanoNode(Node):
 
         self.timer_mocker_status = self.create_timer(1, partial(self.mocker_status_callback))
         self.timer_mocker_battery = self.create_timer(5, partial(self.mocker_battery_callback))
-        # self.timer_mocker_faults = self.create_timer(1, partial(self.mocker_faults_callback))
+        self.timer_mocker_faults = self.create_timer(1, partial(self.mocker_faults_callback))
         self.timer_mocker_ping = self.create_timer(0.5, partial(self.mocker_ping_callback))
 
         self.mock_subscribers = {}
@@ -158,11 +156,10 @@ class NanoNode(Node):
         msg_dict = message_to_ordereddict(msg)
         trace_id = msg_dict['trace_id'] if 'trace_id' in msg_dict else f'{uuid4()}'
         data = json.dumps(msg_dict)
-        mqtt_msg, _ = convert_to_mqtt_pack(ros_topic=ros_topic, trace_id=trace_id, data=data)
+        mqtt_msg, count = convert_to_mqtt_pack(ros_topic=ros_topic, trace_id=trace_id, data=data)
         if mqtt_msg:
-            sys_log.info(
-                f"ROS 消息触发回调, 向 MQTT 发送消息, roseTopic:{ros_topic} => mqttTopic:{mqtt_msg.topic}, 消息内容: {data}")
-            for idx in range(_):
+            sys_log.info(f"ROS => MQTT : {ros_topic} => {mqtt_msg.topic}, 消息内容: {data}")
+            for _ in range(count):
                 import asyncio
                 asyncio.run(async_all_publish(mqtt_msg))
 

@@ -13,7 +13,6 @@ from ..config import Settings
 from ..utils import get_file_absolute_path
 
 sys_log = logging.getLogger('sys-log')
-access_log = logging.getLogger('access-log')
 
 
 def get_logging_level(conf: Settings) -> int:
@@ -53,10 +52,6 @@ def init_log(conf: Settings):
     file_handler = _get_log_handler(filename=conf.sys_log_file, level=level, formatter=formatter)
     sys_log.addHandler(file_handler)
 
-    access_log.setLevel(level=level)
-    access_log.handlers.clear()
-    access_handler = _get_log_handler(filename=conf.access_log_file, level=level, formatter=formatter)
-    access_log.addHandler(access_handler)
 
 
 def _get_log_handler(filename: str, level: int, formatter: logging.Formatter) -> handlers.TimedRotatingFileHandler:
