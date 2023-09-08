@@ -62,5 +62,4 @@ class DownStream():
         if cmd_type in [CmdType.deploy_task.value, CmdType.ctrl.value, CmdType.pong.value]:
             ros_msg = String()
             ros_msg.data = json.dumps(msg['data'])
-            self.logger.sys_log.info(f"xxxxxxxx{ros_topic}")
             self.cache_publishers[ros_topic].publish(ros_msg)
