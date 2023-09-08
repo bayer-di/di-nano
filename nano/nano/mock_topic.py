@@ -121,9 +121,6 @@ class Mocker:
         if event_type == 0 and task_type == 2:
             return
         
-        if event_type == 0:
-            time.sleep(60)
-        
         s = String()
         s.data = json.dumps(mock_resp)
         return s

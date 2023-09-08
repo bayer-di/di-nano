@@ -53,10 +53,8 @@ class NanoMQTTClient:
         """消息回调"""
         body = msg.payload.decode('utf-8')
         self.logger.sys_log.debug(f"message: {client._client_id}, topic: {msg.topic}, 消息内容: {body}")
-        if iscoroutinefunction(self.invoke):
-            self.invoke(client, client._client_id, msg.topic, body)
-        else:
-            self.invoke(client, client._client_id, msg.topic, body)
+        import asyncio
+        asyncio.run(self.invoke(client, client._client_id, msg.topic, body))
 
     def on_subscribe(self, client: Client, userdata, mid, granted_qos):
         """订阅回调"""

@@ -26,7 +26,7 @@ class DownStream():
         self.cache_publishers = cache_publishers
     
 
-    def cmd_process(self, client: Client, client_id: str, topic: str, msg: str):
+    async def cmd_process(self, client: Client, client_id: str, topic: str, msg: str):
         # 云端 MQTT 下发指令处理 || 本地 MQTT 下发指令处理
         cmd_type, ros_topic, need_ack, data, _ = self.converter.convert_to_ros_pack(mqtt_topic=topic, data=msg)
         json_data = json.loads(data)
@@ -62,4 +62,5 @@ class DownStream():
         if cmd_type in [CmdType.deploy_task.value, CmdType.ctrl.value, CmdType.pong.value]:
             ros_msg = String()
             ros_msg.data = json.dumps(msg['data'])
+            self.logger.sys_log.info(f"xxxxxxxx{ros_topic}")
             self.cache_publishers[ros_topic].publish(ros_msg)

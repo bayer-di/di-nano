@@ -39,6 +39,7 @@ class UpStream():
 
     def sub_task_report_callback(self, msg):
         self._ros2_to_mqtt(ros_topic='/task/sub_task_report', msg=msg)
+        
 
 
     def _ros2_to_mqtt(self, ros_topic: str, msg: any):  # type: ignore
@@ -52,6 +53,8 @@ class UpStream():
             for _ in range(count):
                 import asyncio
                 asyncio.run(self.async_all_publish(mqtt_msg))
+                # self._local_publish(msg=mqtt_msg)
+                # self._cloud_publish(msg=mqtt_msg)
 
 
     def _local_publish(self, msg: MqttMsgReq):
