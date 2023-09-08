@@ -5,8 +5,6 @@ on:
 
 env:
  REGISTRY: registry.cn-hangzhou.aliyuncs.com
- HADES_IMAGE_TAG: V1.0.
- KUAFU_IMAGE_TAG: V1.0.
 
 jobs:
  hades:
