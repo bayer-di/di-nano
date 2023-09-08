@@ -10,7 +10,7 @@ from pydantic import BaseSettings, Field
 from typing import Optional, ClassVar
 from yaml import safe_load
 
-from ..utils import get_file_absolute_path
+from .utils import absolute_path
 
 
 class MqttInfo(BaseSettings):
@@ -65,6 +65,6 @@ class FactoryConfig:
 @lru_cache
 def get_configs(f: str):
     """加载一下环境文件"""
-    with open(get_file_absolute_path(f), 'r') as file:  
+    with open(absolute_path(f), 'r') as file:  
         m = safe_load(file)
         return FactoryConfig(conf_data=m)()

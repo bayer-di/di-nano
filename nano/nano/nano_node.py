@@ -19,17 +19,20 @@ from rclpy.node import Node
 from std_msgs.msg import String, Header
 from agv_msgs.msg import BatteryInfoMsg
 from device_msgs.msg import RoboStatus, ErrorStatus
-from rosidl_runtime_py import message_to_ordereddict
+
 from rclpy.qos import qos_profile_services_default
 
-from .core.convert.msg_convert import convert_to_mqtt_pack
-from .core.schemas.message import CmdType
-from .core.logs import sys_log
-from .core.mqtt import async_all_publish
-from .core.utils import load_params_yaml
-from .core.fileproc import read_to_upload, download_to_save
-from .core.config import get_configs
-from .core.caches.global_cache import nano_setting_cache
+from .core.schemas.message import MqttClientType
+from .core.mqtt.mqtt_client import NanoMQTTClient
+from .core.common.logger import Logger
+from .core.common.utils import load_yaml
+from .core.common.config import get_configs, MqttInfo
+from .core.command.downstream import DownStream
+from .core.command.upstream import UpStream
+
+
+
+from .mock_topic import Mocker
 
 class NanoNode(Node):
     """Nano Node"""
@@ -39,36 +42,100 @@ class NanoNode(Node):
 
         # 获取默认配置的路径
         def_conf_path = f"{get_package_share_directory('nano')}/nano.yaml"
-
         self.declare_parameter('conf_file', def_conf_path)
-        # 优先从命令行参数中获取
         self.conf_file = self.get_parameter('conf_file').get_parameter_value().string_value
 
         # 解析配置文件
         print(f"....加载配置文件:{self.conf_file}")
-        self.conf_data = load_params_yaml(self.conf_file)
-       
-        self.conf = get_configs(f=self.conf_file)   
-        nano_setting_cache['obj'] = self.conf
-
+        self.conf_data = load_yaml(self.conf_file)
+        self.conf = get_configs(f=self.conf_file)
+        self.get_logger().info(f"配置文件路径: {self.conf_file}")
+        self.get_logger().info(f"启动参数: {json.dumps(self.conf_data, indent=4)}")
         
         self.cache_publishers = {}
         self.cache_subscribers = {}
-
-        self.get_logger().info(f"配置文件路径: {self.conf_file}")
-        self.get_logger().info(f"启动参数: {json.dumps(self.conf_data, indent=4)}")
+        self.mqtt_clients = {}
 
         self.qos = rclpy.qos.QoSProfile(depth=10)
+
+        self.logger = Logger(settings=self.conf)
+        self.down_stream = DownStream(settings=self.conf, logger=self.logger, cache_publishers=self.cache_publishers)
+        self.up_stream = UpStream(settings=self.conf, logger=self.logger, mqtt_clients=self.mqtt_clients)
         
         self.node_start()
+        self.mqtt_start()
+        
+        self.mock_init()
+
+        print(f"Startup with {self.conf.environment}!")
+        self.logger.sys_log.info(f"Startup with {self.conf.environment}!")
+
 
     def node_start(self):
-
         self.ros_pub_init()
-
         self.ros_sub_init()
 
-        self.mock_init()
+
+    def ros_pub_init(self):
+        """ros topic 的 发布缓存"""
+        self.cache_publishers['/deploy_task'] = self.create_publisher(String, '/deploy_task', qos_profile=qos_profile_services_default)
+        self.cache_publishers['/road_network'] = self.create_publisher(String, '/road_network', qos_profile=qos_profile_services_default)
+        self.cache_publishers['/pong'] = self.create_publisher(String, '/pong', qos_profile=self.qos)
+
+
+    def ros_sub_init(self):
+        """ros topic 的 订阅缓存"""
+        self.cache_subscribers['/ping'] = self.create_subscription(String, '/ping', self.up_stream.ping_callback, qos_profile=self.qos)
+        self.cache_subscribers['/robo_status'] = self.create_subscription(RoboStatus, '/robo_status', self.up_stream.robo_status_callback, qos_profile=self.qos)
+        self.cache_subscribers['/battery_info'] = self.create_subscription(BatteryInfoMsg, '/battery_info', self.up_stream.battery_info_callback, qos_profile=self.qos)
+        self.cache_subscribers['/robo_faults'] = self.create_subscription(ErrorStatus, '/robo_faults', self.up_stream.robo_faults_callback, qos_profile=self.qos)
+        self.cache_subscribers['/task/total_task_report'] = self.create_subscription(String, '/task/total_task_report', self.up_stream.total_task_report_callback, qos_profile=self.qos)
+        self.cache_subscribers['/task/sub_task_report'] = self.create_subscription(String, '/task/sub_task_report', self.up_stream.sub_task_report_callback, qos_profile=self.qos)
+
+
+    def mqtt_start(self):
+        """MQTT初始化"""
+        mec = self.conf.mqtt
+        client_id = f"{self.conf.device_no}"
+        mqttv1 = self._start_mqtt_client(mqtt_info=mec.local, client_id=client_id)
+        if mqttv1:
+            self.mqtt_clients[MqttClientType.LOCAL.value] = mqttv1
+        
+        mqttv2 = self._start_mqtt_client(mqtt_info=mec.cloud, client_id=client_id)
+        if mqttv2:
+            self.mqtt_clients[MqttClientType.CLOUD.value] = mqttv2
+        
+
+    def _start_mqtt_client(self, mqtt_info: MqttInfo, client_id: str):
+        """MQTT初始化"""
+        device_no = self.conf.device_no
+        topic_prefix = self.conf.name
+        task_label = self.conf.task_label
+        env_prefix = 'test' if self.conf.environment != 'production' else 'prod'
+
+        """/nano/cmd/{device_no}/#"""
+        cmd_mqtt_topic = f"/{topic_prefix}/{env_prefix}/cmd/{device_no}/#"
+        if mqtt_info and mqtt_info.host and mqtt_info.port:
+            print(f"开启 MQTT 链接, {mqtt_info.host}:{mqtt_info.port}, client_id: {client_id}, topic: {cmd_mqtt_topic}")
+            self.logger.sys_log.info(f"开启 MQTT 链接, {mqtt_info.host}:{mqtt_info.port}, client_id: {client_id}, topic: {cmd_mqtt_topic}")
+            return NanoMQTTClient(
+                client_id=client_id,
+                qos=1,
+                topics=[cmd_mqtt_topic],
+                invoke=self.down_stream.cmd_process,
+                mqtt_config = {
+                    "host": mqtt_info.host,
+                    "port": int(mqtt_info.port),
+                    "username": mqtt_info.username,
+                    "password": mqtt_info.password,
+                    "online_topic": f"/{topic_prefix}/{env_prefix}/up/{device_no}/device_online",
+                    "online_body": json.dumps({'client_id': device_no, 'msg_type': 'device_online', 'data': task_label}),
+                    "keepalived": 10
+                },
+                logger=self.logger)
+        return None
+
+
 
     def mock_init(self):
         """模拟ROS TOPIC"""
@@ -90,115 +157,24 @@ class NanoNode(Node):
 
     def mocker_deploy_task_callback(self, msg):
         """模拟消费"""
-        from .mock_topic import Mocker
-        mocker = Mocker()
-        resp = mocker.consume(msg.data)
+        resp = Mocker().consume(msg.data)
         if resp:
             self.mock_publishers['/task/total_task_report'].publish(resp)
 
-
     def mocker_status_callback(self):
         """模拟消息发送"""
-        from .mock_topic import Mocker
-        mocker = Mocker()
-        self.mock_publishers['/robo_status'].publish(mocker.gen_robo_status())
+        self.mock_publishers['/robo_status'].publish(Mocker().gen_robo_status())
 
     def mocker_battery_callback(self):
         """模拟消息发送"""
-        from .mock_topic import Mocker
-        mocker = Mocker()
-        self.mock_publishers['/battery_info'].publish(mocker.gen_battery())
+        self.mock_publishers['/battery_info'].publish(Mocker().gen_battery())
 
     def mocker_faults_callback(self):
         """模拟消息发送"""
-        from .mock_topic import Mocker
-        mocker = Mocker()
-        self.mock_publishers['/robo_faults'].publish(mocker.gen_err())
+        self.mock_publishers['/robo_faults'].publish(Mocker().gen_err())
 
     def mocker_ping_callback(self):
         """模拟消息发送"""
-        from .mock_topic import Mocker
-        mocker = Mocker()
-        self.mock_publishers['/ping'].publish(mocker.gen_ping())
+        self.mock_publishers['/ping'].publish(Mocker().gen_ping())
 
-    def ros_pub_init(self):
-        """ros topic 的 发布缓存"""
-        # TODO: 创建发布器 
-        self.cache_publishers['/deploy_task'] = self.create_publisher(String, '/deploy_task', qos_profile=qos_profile_services_default)
-        self.cache_publishers['/road_network'] = self.create_publisher(String, '/road_network', qos_profile=qos_profile_services_default)
-        self.cache_publishers['/pong'] = self.create_publisher(String, '/pong', qos_profile=self.qos)
-
-    def ros_sub_init(self):
-        """ros topic 的 订阅缓存"""
-        # TODO: 创建订阅器
-        self.cache_subscribers['/ping'] = self.create_subscription(String, '/ping', self.ping_callback,
-                                                                   qos_profile=self.qos)
-        self.cache_subscribers['/robo_status'] = self.create_subscription(RoboStatus, '/robo_status',
-                                                                          self.robo_status_callback,
-                                                                          qos_profile=self.qos)
-        self.cache_subscribers['/battery_info'] = self.create_subscription(BatteryInfoMsg, '/battery_info',
-                                                                           self.battery_info_callback,
-                                                                           qos_profile=self.qos)
-        self.cache_subscribers['/robo_faults'] = self.create_subscription(ErrorStatus, '/robo_faults',
-                                                                          self.robo_faults_callback,
-                                                                          qos_profile=self.qos)
-        self.cache_subscribers['/task/total_task_report'] = self.create_subscription(String, 
-                                                                                     '/task/total_task_report',
-                                                                                     self.total_task_report_callback,
-                                                                                     qos_profile=self.qos)
-        self.cache_subscribers['/task/sub_task_report'] = self.create_subscription(String, 
-                                                                                   '/task/sub_task_report',
-                                                                                   self.sub_task_report_callback,
-                                                                                   qos_profile=self.qos)
-
-    def _ros2_to_mqtt(self, ros_topic: str, msg: any):  # type: ignore
-        """ros msg 转成 Mqtt msg 转发到 mqtt server"""
-        msg_dict = message_to_ordereddict(msg)
-        trace_id = msg_dict['trace_id'] if 'trace_id' in msg_dict else f'{uuid4()}'
-        data = json.dumps(msg_dict)
-        mqtt_msg, count = convert_to_mqtt_pack(ros_topic=ros_topic, trace_id=trace_id, data=data)
-        if mqtt_msg:
-            sys_log.info(f"ROS => MQTT : {ros_topic} => {mqtt_msg.topic}, 消息内容: {data}")
-            for _ in range(count):
-                import asyncio
-                asyncio.run(async_all_publish(mqtt_msg))
-
-    def ping_callback(self, msg):
-        self._ros2_to_mqtt(ros_topic='/ping', msg=msg)
-
-    def robo_status_callback(self, msg):
-        self._ros2_to_mqtt(ros_topic='/robo_status', msg=msg)
-
-    def battery_info_callback(self, msg):
-        self._ros2_to_mqtt(ros_topic='/battery_info', msg=msg)
-
-    def robo_faults_callback(self, msg):
-        self._ros2_to_mqtt(ros_topic='/robo_faults', msg=msg)
-
-    def total_task_report_callback(self, msg):
-        self._ros2_to_mqtt(ros_topic='/task/total_task_report', msg=msg)
-
-    def sub_task_report_callback(self, msg):
-        self._ros2_to_mqtt(ros_topic='/task/sub_task_report', msg=msg)
-
-    def mqtt_to_ros2(self, ros_topic: str, msg: dict, cmd_type: str):
-        """TODO: 需要发布信息数据"""
-        if cmd_type in [CmdType.maps_updated.value, CmdType.road_distribution.value]:
-            data = msg['data']
-            if data and 'url' in data:
-                url = data['url']
-                version = data['version'] if 'version' in data else None
-                if cmd_type == CmdType.maps_updated.value:
-                    read_to_upload(url=url, version=version)
-                else:
-                    need_publish = download_to_save(url=url, version=version)
-                    if need_publish:
-                        version_msg = String()
-                        version_msg.data = str(version)
-                        self.cache_publishers['/road_network'].publish(version_msg)
-                    
-
-        if cmd_type in [CmdType.deploy_task.value, CmdType.ctrl.value, CmdType.pong.value]:
-            ros_msg = String()
-            ros_msg.data = json.dumps(msg['data'])
-            self.cache_publishers[ros_topic].publish(ros_msg)
+    

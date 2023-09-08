@@ -6,9 +6,8 @@
 """
 
 from enum import Enum, unique
-
 from pydantic import BaseModel
-
+from typing import Union
 
 @unique
 class MessageType(Enum):
@@ -73,3 +72,18 @@ class AgvDownMsg(BaseModel):
     msg_type: str
     data: object
     # TODO: 定义消息内容
+
+
+@unique
+class MqttClientType(Enum):
+    """MQTT客户端类型枚举"""
+    LOCAL = 'local'
+    CLOUD = 'cloud'
+
+
+class MqttMsgReq(BaseModel):
+    """消息类"""
+    topic: str
+    msg: str
+    qos: int = 1
+    client: Union[str, None] = None

@@ -13,15 +13,10 @@ setup(
     packages=[
         package_name,
         package_name + '.core',
-        package_name + '.core.caches',
         package_name + '.core.command',
-        package_name + '.core.config',
-        package_name + '.core.convert',
-        package_name + '.core.fileproc',
-        package_name + '.core.logs',
+        package_name + '.core.common',
         package_name + '.core.mqtt',
         package_name + '.core.schemas',
-        package_name + '.core.utils',
     ],
     data_files=[
         ('share/ament_index/resource_index/packages',

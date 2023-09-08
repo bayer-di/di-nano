@@ -17,6 +17,6 @@ nano_node_cache = {}
 
 
 """
-ros2 参数后，解析后缓存的 配置对象, 供给 fastapi 启动的时候使用, key in ['obj']
+ros2 参数后，解析后缓存的 配置对象, 启动的时候使用, key in ['obj']
 """
 nano_setting_cache = {}
