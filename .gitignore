@@ -23,5 +23,6 @@ log
 
 !logs/*.py
 
-*-amr-002.yaml
+nano-*.yaml
+
 robo_msgs

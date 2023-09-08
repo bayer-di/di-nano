@@ -1,0 +1,32 @@
+name: 'nano_mock 构建镜像'
+
+on:
+ workflow_dispatch:
+
+env:
+ REGISTRY: registry.cn-hangzhou.aliyuncs.com
+ HADES_IMAGE_TAG: V1.0.
+ KUAFU_IMAGE_TAG: V1.0.
+
+jobs:
+ hades:
+   runs-on: ubuntu-latest
+   steps:
+     - uses: actions/checkout@v3
+     - name: Set up QEMU
+       uses: docker/setup-qemu-action@v2
+     - name: Set up Docker Buildx
+       uses: docker/setup-buildx-action@v2
+     - uses: docker/login-action@v2
+       with:
+         registry: ${{ env.REGISTRY }}
+         username: ${{ secrets.ALI_HUB_USERNAME }}
+         password: ${{ secrets.ALI_HUB_PASSWORD }}
+     - name: Build and push
+       uses: docker/build-push-action@v4
+       with:
+         context: .
+         file: ./devops/nano.mock.dockerfile
+         push: true
+         tags: ${{ env.REGISTRY }}/bayer-di-pub/nano_mock:latest
+         platforms: linux/amd64,linux/arm64
