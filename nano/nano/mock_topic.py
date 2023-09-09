@@ -9,14 +9,12 @@
 Mock Ros Topic
 """
 
-import random
 import json
-import time
-from uuid import uuid4
-from std_msgs.msg import String
+import random
 from agv_msgs.msg import BatteryInfoMsg
-from task_msgs.msg import Point
 from device_msgs.msg import RoboStatus, ErrorStatus, ErrorMessages, ErrorMessage
+from std_msgs.msg import String
+from task_msgs.msg import Point
 
 
 class Mocker:
@@ -36,7 +34,7 @@ class Mocker:
         battery.percentage = 80
         battery.battery_error_code = '0110'
         return battery
-    
+
     def gen_robo_status(self):
         robo_status = RoboStatus()
         robo_status.robo_status = 1
@@ -52,7 +50,6 @@ class Mocker:
         robo_status.current_pos = self.gen_point()
         return robo_status
 
-
     def gen_point(self):
         p_a = self.gen_points()
         idx = random.randint(0, len(p_a) - 1)
@@ -62,7 +59,7 @@ class Mocker:
         p = []
         for a in [[39.62, 35.73], [40.62, 35.73], [39.62, 40.73], [42.62, 33.73], [33.33, 33.73]]:
             px = Point()
-            px.node_id= 'G1003'
+            px.node_id = 'G1003'
             px.x = a[0]
             px.y = a[1]
             px.yaw = random.randint(0, 360) * 1.1
@@ -70,7 +67,6 @@ class Mocker:
             px.description = ''
             p.append(px)
         return p
-
 
     def gen_err(self):
         err_status = ErrorStatus()
@@ -88,13 +84,11 @@ class Mocker:
         ems.error_messages = self.gen_err_arr()
         return ems
 
-
     def gen_err_arr(self):
         error_msgs = []
         # em = self.gen_err_item()
         # error_msgs.append(em)
         return error_msgs
-
 
     def gen_err_item(self):
         em = ErrorMessage()
@@ -116,11 +110,11 @@ class Mocker:
             "event_type": event_type,
             "task_type": task_type,
             "task_finish": 1 if event_type == 0 else 2,
-            "results":[]
+            "results": []
         }
         if event_type == 0 and task_type == 2:
             return
-        
+
         s = String()
         s.data = json.dumps(mock_resp)
         return s

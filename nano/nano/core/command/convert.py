@@ -7,8 +7,8 @@
 import json
 import time
 
-from ..schemas.message import AgvUpMsg, MessageType, CmdType, MqttMsgReq
 from ..common.config import Settings
+from ..schemas.message import AgvUpMsg, MessageType, CmdType, MqttMsgReq
 
 """
 ros to mqtt topic 映射, 定制好后不会再变化 {ros_topic: [mqtt_attr, mqtt_topic, 需要多次发送的次数]}
@@ -63,34 +63,34 @@ mqtt_2_ros_topic_map = {
     'task_report_receipt': [CmdType.task_report_receipt.value, '/task_report_receipt', False]
 }
 
+
 class Converter():
     def __init__(self,
                  settings: Settings):
         self.settings = settings
 
-
     def _topic_params(self):
         env_prefix = 'test' if self.settings.environment != 'production' else 'prod'
         return self.settings.name, self.settings.device_no, env_prefix
 
-
     def convert_to_ros_pack(self, mqtt_topic: str, data: any) -> any:  # type: ignore
         if mqtt_topic:
             cmd_name = mqtt_topic.split('/')[-1]
-            d = mqtt_2_ros_topic_map[cmd_name]
-            # cmd_type, ros_topic, need_ack, data, cmd_name
-            return d[0], d[1], d[2], data, cmd_name
-
+            if cmd_name in mqtt_2_ros_topic_map.keys():
+                d = mqtt_2_ros_topic_map[cmd_name]
+                # cmd_type, ros_topic, need_ack, data, cmd_name
+                return d[0], d[1], d[2], data, cmd_name
 
     def convert_to_mqtt_pack(self, ros_topic: str, trace_id: str, data: any) -> any:  # type: ignore
-        d = ros_2_mqtt_topic_map[ros_topic]
-        """/nano/{env}/up/{device_no}/{topic_name}"""
-        if d:
-            msg_type = d[0]
-            topic = d[1]
-            name, device_no, env_prefix = self._topic_params()
-            mqtt_topic = f"/{name}/{env_prefix}/up/{device_no}/{topic}"
-            # TODO: 根据消息构建数据
-            agv_up_msg = AgvUpMsg(trace_id=trace_id, device_no=device_no, msg_type=msg_type, data=data,
-                                ts=int(time.time() * 1000))
-            return MqttMsgReq(topic=mqtt_topic, msg=json.dumps(agv_up_msg.dict())), d[2]
+        if ros_topic and ros_topic in ros_2_mqtt_topic_map.keys():
+            d = ros_2_mqtt_topic_map[ros_topic]
+            """/nano/{env}/up/{device_no}/{topic_name}"""
+            if d:
+                msg_type = d[0]
+                topic = d[1]
+                name, device_no, env_prefix = self._topic_params()
+                mqtt_topic = f"/{name}/{env_prefix}/up/{device_no}/{topic}"
+                # TODO: 根据消息构建数据
+                agv_up_msg = AgvUpMsg(trace_id=trace_id, device_no=device_no, msg_type=msg_type, data=data,
+                                      ts=int(time.time() * 1000))
+                return MqttMsgReq(topic=mqtt_topic, msg=json.dumps(agv_up_msg.dict())), d[2]

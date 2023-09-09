@@ -9,6 +9,7 @@ from enum import Enum, unique
 from pydantic import BaseModel
 from typing import Union
 
+
 @unique
 class MessageType(Enum):
     """业务消息类型,因为所有的 ROS 数据统一汇报到一个 上行 MQTT topic"""
@@ -59,7 +60,6 @@ class CmdType(Enum):
 
     # 消息报告回执
     task_report_receipt = 'task_report_receipt'
-
 
 
 class AgvUpMsg(BaseModel):

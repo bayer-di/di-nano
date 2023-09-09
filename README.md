@@ -201,13 +201,6 @@ ros2 launch nano nano.launch.py start:=true
   
   > [http://localhost:18083/](http://localhost:18083/) (admin/public)
 
-- `nano` restful api地址
-  
-  > - redoc <http://localhost:8001/redoc>
-  > - openapi <http://localhost:8001/docs>
-
-- `nano`(占领 `8001` 端口)【`可以更改`】
-
 - `nano` [`Nano` `mqtt` 消息说明](./nano/nano/README.md) (`Backend`需要关心)
   
   ```shell

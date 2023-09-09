@@ -7,7 +7,6 @@
 
 import os
 import requests
-
 from typing import Optional
 
 from ..common.config import Settings
@@ -19,7 +18,7 @@ class FileProcess():
     def __init__(self, settings: Settings, logger: Logger):
         self.settings = settings
         self.logger = logger
-    
+
     def download_to_save(self, url: str, version: Optional[str] = None) -> bool:
         """下载"""
         dir_path = self.settings.road_path
@@ -60,8 +59,6 @@ class FileProcess():
         except Exception as e:
             self.logger.sys_log.error(f"下载路网错误 {url}", e)
         return False
-    
-
 
     def read_to_upload(self, url: str, version: Optional[str] = None):
         dir_path = self.settings.maps_path
@@ -80,7 +77,8 @@ class FileProcess():
 
         files = []
         for file_name in file_names:
-            files.append(('files', (file_name, open(os.path.join(dir_path, file_name), 'rb'), 'application/octet-stream')))
+            files.append(
+                ('files', (file_name, open(os.path.join(dir_path, file_name), 'rb'), 'application/octet-stream')))
 
         if len(files) > 0:
             # 查看是不是 yaml，读取版本进行处理   

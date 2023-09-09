@@ -26,6 +26,7 @@ class MqttSettings(BaseSettings):
     local: MqttInfo = Field(..., env='local')
     cloud: MqttInfo = Field(..., env='cloud')
 
+
 class Settings(BaseSettings):
     """配置类"""
     # API 版本
@@ -46,7 +47,7 @@ class Settings(BaseSettings):
     sys_log_file: str = Field(..., env='sys_log_file')
 
     maps_path: str = Field(..., env='maps_path')
-    
+
     road_path: str = Field(..., env='road_path')
 
     mqtt: MqttSettings = Field(..., env='mqtt')
@@ -59,12 +60,12 @@ class FactoryConfig:
         self.conf_data = conf_data
 
     def __call__(self):
-        return Settings(**self.conf_data) # type: ignore
+        return Settings(**self.conf_data)  # type: ignore
 
 
 @lru_cache
 def get_configs(f: str):
     """加载一下环境文件"""
-    with open(absolute_path(f), 'r') as file:  
+    with open(absolute_path(f), 'r') as file:
         m = safe_load(file)
         return FactoryConfig(conf_data=m)()

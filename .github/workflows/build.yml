@@ -25,7 +25,7 @@ jobs:
        uses: docker/build-push-action@v4
        with:
          context: .
-         file: ./devops/nano.mock.dockerfile
+         file: ./deploy/nano.mock.dockerfile
          push: true
          tags: ${{ env.REGISTRY }}/bayer-di-pub/nano_mock:latest
          platforms: linux/amd64,linux/arm64

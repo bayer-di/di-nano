@@ -5,22 +5,21 @@
 @Software: 代理ROS2数据、指令到MQTT应用
 """
 import json
-from uuid import uuid4
 from rosidl_runtime_py import message_to_ordereddict
+from uuid import uuid4
 
+from .convert import Converter
+from .total_task_report_queue import ReportOrderedDict
 from ..common.config import Settings
 from ..common.logger import Logger
 from ..schemas.message import MqttClientType, MqttMsgReq
-from .convert import Converter
-from .total_task_report_queue import ReportOrderedDict
-
 
 
 class UpStream():
     def __init__(self, settings: Settings, logger: Logger, mqtt_clients: dict, report_dict: ReportOrderedDict):
         self.settings = settings
         self.logger = logger
-        self.converter = Converter(settings=self.settings) 
+        self.converter = Converter(settings=self.settings)
         self.mqtt_clients = mqtt_clients
         self.report_dict = report_dict
 
@@ -41,8 +40,6 @@ class UpStream():
 
     def sub_task_report_callback(self, msg):
         self._ros2_to_mqtt(ros_topic='/task/sub_task_report', msg=msg)
-        
-
 
     def _ros2_to_mqtt(self, ros_topic: str, msg: any):  # type: ignore
         """ros msg 转成 Mqtt msg 转发到 mqtt server"""
@@ -51,25 +48,22 @@ class UpStream():
         data = json.dumps(msg_dict)
         mqtt_msg, count = self.converter.convert_to_mqtt_pack(ros_topic=ros_topic, trace_id=trace_id, data=data)
         if mqtt_msg:
-            self.logger.sys_log.info(f"ROS => MQTT : {ros_topic} => {mqtt_msg.topic}, 消息内容: {data}")
+            self.logger.sys_log.info(f"ROS => MQTT : {ros_topic} => {mqtt_msg.topic}, 消息内容: {mqtt_msg.msg}")
             import asyncio
             asyncio.run(self.async_all_publish(mqtt_msg))
             if count > 1:
                 self.report_dict.add(key=trace_id, max_count=count, value=mqtt_msg)
 
     def retry_send_to(self, mqtt_msg: MqttMsgReq):
-        self.logger.sys_log.info(f"ROS => MQTT [RETRY] :  => {mqtt_msg.topic}, 消息内容: {mqtt_msg.msg}")
+        self.logger.sys_log.info(f"RETRY => MQTT : {mqtt_msg.topic}, 消息内容: {mqtt_msg.msg}")
         import asyncio
         asyncio.run(self.async_all_publish(mqtt_msg))
-
-
 
     def _local_publish(self, msg: MqttMsgReq):
         """发送本地 MQTT"""
         if msg:
             msg.client = MqttClientType.LOCAL.value
             self.client_publish(msg=msg)
-
 
     def _cloud_publish(self, msg: MqttMsgReq):
         """发送云端 MQTT"""
@@ -92,7 +86,6 @@ class UpStream():
                 cache_client.publish(topic=msg.topic, msg=msg.msg, qos=msg.qos)
             else:
                 self.logger.sys_log.debug(f"MQTT客户端类型 {client_type}, 客户端为空, 发送消息 {msg.dict()}")
-
 
     async def async_all_publish(self, msg: MqttMsgReq):
         """异步开启发送"""

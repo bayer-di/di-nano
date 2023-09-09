@@ -6,7 +6,6 @@
 """
 
 from paho.mqtt.client import Client, MQTTMessage
-from inspect import iscoroutinefunction
 
 from ..common.logger import Logger
 
@@ -31,25 +30,24 @@ class NanoMQTTClient:
         self.online_topic = mqtt_config['online_topic']
         self.online_body = mqtt_config['online_body']
 
-        client=Client(client_id=self.client_id, clean_session=True, reconnect_on_failure=True)
+        client = Client(client_id=self.client_id, clean_session=True, reconnect_on_failure=True)
         client.username_pw_set(username=mqtt_config['username'], password=mqtt_config['password'])
-        client.on_connect=self.on_connect
-        client.on_disconnect=self.on_disconnect
-        client.on_message=self.on_message
-        client.on_subscribe=self.on_subscribe
+        client.on_connect = self.on_connect
+        client.on_disconnect = self.on_disconnect
+        client.on_message = self.on_message
+        client.on_subscribe = self.on_subscribe
 
         client.connect(
             host=mqtt_config['host'],
             port=mqtt_config['port'],
             keepalive=mqtt_config['keepalived'])
-    
-        
+
         self.mqtt = client
 
         self.mqtt.loop_start()
 
     def on_message(self, client: Client, userdata, msg: MQTTMessage):
-        
+
         """消息回调"""
         body = msg.payload.decode('utf-8')
         self.logger.sys_log.debug(f"message: {client._client_id}, topic: {msg.topic}, 消息内容: {body}")
@@ -59,21 +57,20 @@ class NanoMQTTClient:
     def on_subscribe(self, client: Client, userdata, mid, granted_qos):
         """订阅回调"""
         self.logger.sys_log.debug(f"subscribe: {client._client_id}, {mid}")
-    
+
     def on_disconnect(self, client: Client, userdata, rc):
         if rc != 0:
             self.logger.sys_log.debug("意外断开连接.....")
         else:
             self.logger.sys_log.debug("正常断开连接.....")
-        
+
         self.logger.sys_log.warn(f"disconnect{client._client_id} 返回码, {rc}.........重连中........")
         client.reconnect_delay_set(min_delay=1, max_delay=3)
 
     def on_connect(self, client: Client, userdata, flags, rc):
         if rc == 0:
             """成功连结回调"""
-            self.logger.sys_log.debug(
-                f"connected: {client._client_id}[{userdata}], {flags}, {rc}")
+            self.logger.sys_log.debug(f"connected: {client._client_id}[{userdata}], {flags}, {rc}")
             """开启订阅操作"""
             for topic in self.topics:
                 self.mqtt.subscribe(topic, qos=self.qos)
@@ -85,7 +82,6 @@ class NanoMQTTClient:
         else:
             self.logger.sys_log.warn(f"connect failed: {client._client_id} 返回码, {rc}.........重连中........")
             client.reconnect_delay_set(min_delay=1, max_delay=3)
-    
 
     def publish(self, topic: str, msg: str, qos: int = 0) -> None:
         """发布消息"""
@@ -93,9 +89,8 @@ class NanoMQTTClient:
             self.mqtt.publish(topic, msg, qos)
         else:
             self.logger.sys_log.error(f"MQTT已经断链.....重连ING")
-            
 
-    def _is_ip(self, host:str) -> bool:
+    def _is_ip(self, host: str) -> bool:
         import ipaddress
         try:
             ipaddress.ip_address(host)

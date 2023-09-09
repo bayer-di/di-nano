@@ -6,12 +6,14 @@
 """
 import os
 from logging import handlers, Formatter, getLogger, DEBUG, INFO, WARN, ERROR
+
 from .config import Settings
 from .utils import absolute_path
 
+
 class Logger():
-    
     """自定义日志组件"""
+
     def __init__(self, settings: Settings):
         self.level = self._level(settings=settings)
         self.formatter = Formatter(
@@ -23,19 +25,18 @@ class Logger():
         )
         file_path = absolute_path(settings.sys_log_file)
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        
+
         self.file_handler = self._handler(filename=settings.sys_log_file)
 
         sys_log = getLogger('sys-log')
         sys_log.setLevel(level=self.level)
         sys_log.handlers.clear()
         sys_log.addHandler(self.file_handler)
-        self.sys_log=sys_log
-
+        self.sys_log = sys_log
 
     # 获取日志级别
     def _level(self, settings: Settings) -> int:
-    
+
         level = settings.log_level
 
         if level == 'DEBUG':
