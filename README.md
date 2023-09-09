@@ -18,7 +18,7 @@
 
 ```shell
  - di-nano
- |-- devops    # devops
+ |-- deploy    # deploy
  |-- nano      # 真实的项目
  |-- nano-msg  # 自定义ROS2消息 (Msg、Service、Action)
 ```
@@ -35,7 +35,7 @@
 ## 启动 EMQX
 
 ```shell
-docker-compose -f ./devops/docker-compose-emqx.yml up -d
+docker-compose -f ./deploy/docker-compose-emqx.yml up -d
 ```
 
 ## 第一次初始化项目
@@ -75,7 +75,7 @@ pip freeze > requirements.txt
 所有操作均在 `di-nano` 目录
 
 ```shell
-docker build -t ros2:emqx -f devops/ros.dockerfile .
+docker build -t ros2:emqx -f deploy/ros.dockerfile .
 ```
 
 ## 启动一个工作区
@@ -150,7 +150,7 @@ ros2 launch <package_name> <package_name>.launch.py
 
     ```shell
     # 先进入 `di-nano/devops` 目录
-    docker-compose -f ./devops/docker-compose-ros.yml up -d
+    docker-compose -f ./deploy/docker-compose-ros.yml up -d
     ```
 
 ## 后续调试开发步骤
@@ -219,29 +219,12 @@ ros2 launch nano nano.launch.py start:=true
 - `nano.yaml`配置文件说明
   
   ```yaml
-  # 应用名称
+  #COMMON 配置
   name: nano
-
-  # 版本
   version: 1.0.0
-
-  # FastAPI端口
-  port: 8011
-
-  # 设备编号
-  device_no: RB0001
-
-  # 环境, 默认开发环境（关闭 redoc / swagger / debug）
-  # production or development
-  environment: development
-
-  # 日志级别与地址
-  # DEBUG 、INFO、 WARNING OR WARN 、ERROR
-  log_level: INFO 
-  sys_log_file: logs/nano_biz.log
-  access_log_file: logs/nano_access.log
-
-  # MQTT配置
+  device_no: test # 设备编号
+  task_label: patrol # 业务LABEL
+  environment: development # production or development
   mqtt: 
     local:
       host: 127.0.0.1
@@ -254,18 +237,11 @@ ros2 launch nano nano.launch.py start:=true
       username: ''
       password: ''
 
-  ```
+  # 日志配置
+  log_level: INFO # DEBUG 、INFO、 WARNING OR WARN 、ERROR
+  sys_log_file: logs/nano_biz.log
 
-- 内置的测试指令
-  
-  ```shell
-    curl --request POST \
-    --url http://127.0.0.1:8001/api/v1/publish \
-    --header 'content-type: application/json' \
-    --data '{
-        "topic":"/nano/cmd/RB0001/nano_task",
-        "msg":"wocao404",
-        "qos": 1,
-        "client": "local"
-    }'
+  # 地图与路网约定配置
+  maps_path: /home/map/
+  road_path: /home/road/
   ```
