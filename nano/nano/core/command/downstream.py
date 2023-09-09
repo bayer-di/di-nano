@@ -15,16 +15,17 @@ from ..schemas.message import CmdType
 
 from .convert import Converter
 from .file_processor import FileProcess
+from .total_task_report_queue import ReportOrderedDict
 
 
 class DownStream():
-    def __init__(self, settings: Settings, logger: Logger, cache_publishers: dict):
+    def __init__(self, settings: Settings, logger: Logger, cache_publishers: dict, report_dict: ReportOrderedDict):
         self.settings = settings
         self.logger = logger
         self.converter = Converter(settings=self.settings)
         self.file_processor = FileProcess(settings=self.settings, logger=self.logger)
         self.cache_publishers = cache_publishers
-    
+        self.report_dict = report_dict
 
     async def cmd_process(self, client: Client, client_id: str, topic: str, msg: str):
         # 云端 MQTT 下发指令处理 || 本地 MQTT 下发指令处理
@@ -57,7 +58,10 @@ class DownStream():
                         version_msg = String()
                         version_msg.data = str(version)
                         self.cache_publishers['/road_network'].publish(version_msg)
-                    
+        
+        if cmd_type in [CmdType.task_report_receipt.value]:
+            # 预备从队列中 移除任务报告的发送, 因为任务报告发送完毕
+            self.report_dict.remove(key=msg['trace_id'])
 
         if cmd_type in [CmdType.deploy_task.value, CmdType.ctrl.value, CmdType.pong.value]:
             ros_msg = String()

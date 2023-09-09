@@ -29,6 +29,7 @@ from .core.common.utils import load_yaml
 from .core.common.config import get_configs, MqttInfo
 from .core.command.downstream import DownStream
 from .core.command.upstream import UpStream
+from .core.command.total_task_report_queue import ReportOrderedDict
 
 
 
@@ -60,7 +61,8 @@ class NanoNode(Node):
 
         self.logger = Logger(settings=self.conf)
 
-        
+        self.report_dict = ReportOrderedDict()
+
         self.node_start()
         self.mqtt_start()
         
@@ -73,6 +75,7 @@ class NanoNode(Node):
     def node_start(self):
         self.ros_pub_init()
         self.ros_sub_init()
+        self.report_timer_init()
 
 
     def ros_pub_init(self):
@@ -84,23 +87,19 @@ class NanoNode(Node):
 
     def ros_sub_init(self):
         """ros topic 的 订阅缓存"""
-        up_stream_ping = UpStream(settings=self.conf, logger=self.logger, mqtt_clients=self.mqtt_clients)
-        self.cache_subscribers['/ping'] = self.create_subscription(String, '/ping', up_stream_ping.ping_callback, qos_profile=self.qos)
+        self.up_stream = UpStream(settings=self.conf, logger=self.logger, mqtt_clients=self.mqtt_clients, report_dict=self.report_dict)
+        self.cache_subscribers['/ping'] = self.create_subscription(String, '/ping', self.up_stream.ping_callback, qos_profile=self.qos)
+        self.cache_subscribers['/robo_status'] = self.create_subscription(RoboStatus, '/robo_status', self.up_stream.robo_status_callback, qos_profile=self.qos)
+        self.cache_subscribers['/battery_info'] = self.create_subscription(BatteryInfoMsg, '/battery_info', self.up_stream.battery_info_callback, qos_profile=self.qos)
+        self.cache_subscribers['/robo_faults'] = self.create_subscription(ErrorStatus, '/robo_faults', self.up_stream.robo_faults_callback, qos_profile=self.qos)
+        self.cache_subscribers['/task/total_task_report'] = self.create_subscription(String, '/task/total_task_report', self.up_stream.total_task_report_callback, qos_profile=self.qos)
+        self.cache_subscribers['/task/sub_task_report'] = self.create_subscription(String, '/task/sub_task_report', self.up_stream.sub_task_report_callback, qos_profile=self.qos)
 
-        up_stream_robo_status = UpStream(settings=self.conf, logger=self.logger, mqtt_clients=self.mqtt_clients)
-        self.cache_subscribers['/robo_status'] = self.create_subscription(RoboStatus, '/robo_status', up_stream_robo_status.robo_status_callback, qos_profile=self.qos)
-        
-        up_stream_battery = UpStream(settings=self.conf, logger=self.logger, mqtt_clients=self.mqtt_clients)
-        self.cache_subscribers['/battery_info'] = self.create_subscription(BatteryInfoMsg, '/battery_info', up_stream_battery.battery_info_callback, qos_profile=self.qos)
-        
-        up_stream_faults = UpStream(settings=self.conf, logger=self.logger, mqtt_clients=self.mqtt_clients)
-        self.cache_subscribers['/robo_faults'] = self.create_subscription(ErrorStatus, '/robo_faults', up_stream_faults.robo_faults_callback, qos_profile=self.qos)
-        
-        up_stream_total = UpStream(settings=self.conf, logger=self.logger, mqtt_clients=self.mqtt_clients)
-        self.cache_subscribers['/task/total_task_report'] = self.create_subscription(String, '/task/total_task_report', up_stream_total.total_task_report_callback, qos_profile=self.qos)
-        
-        up_stream_sub = UpStream(settings=self.conf, logger=self.logger, mqtt_clients=self.mqtt_clients)
-        self.cache_subscribers['/task/sub_task_report'] = self.create_subscription(String, '/task/sub_task_report', up_stream_sub.sub_task_report_callback, qos_profile=self.qos)
+    def report_timer_init(self):
+        self.timer_task_report = self.create_timer(1, partial(self.scan_task_report_callback))
+
+    def scan_task_report_callback(self):
+        self.report_dict.process(callback=self.up_stream.retry_send_to)
 
 
     def mqtt_start(self):
@@ -123,7 +122,7 @@ class NanoNode(Node):
         task_label = self.conf.task_label
         env_prefix = 'test' if self.conf.environment != 'production' else 'prod'
 
-        down_stream = DownStream(settings=self.conf, logger=self.logger, cache_publishers=self.cache_publishers)
+        down_stream = DownStream(settings=self.conf, logger=self.logger, cache_publishers=self.cache_publishers, report_dict=self.report_dict)
 
         """/nano/cmd/{device_no}/#"""
         cmd_mqtt_topic = f"/{topic_prefix}/{env_prefix}/cmd/{device_no}/#"

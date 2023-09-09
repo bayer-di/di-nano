@@ -54,7 +54,12 @@ class CmdType(Enum):
     # 控制指令
     ctrl = 'ctrl'
 
+    # 心跳响应
     pong = 'pong'
+
+    # 消息报告回执
+    task_report_receipt = 'task_report_receipt'
+
 
 
 class AgvUpMsg(BaseModel):

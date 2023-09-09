@@ -12,15 +12,17 @@ from ..common.config import Settings
 from ..common.logger import Logger
 from ..schemas.message import MqttClientType, MqttMsgReq
 from .convert import Converter
+from .total_task_report_queue import ReportOrderedDict
 
 
 
 class UpStream():
-    def __init__(self, settings: Settings, logger: Logger, mqtt_clients: dict):
+    def __init__(self, settings: Settings, logger: Logger, mqtt_clients: dict, report_dict: ReportOrderedDict):
         self.settings = settings
         self.logger = logger
         self.converter = Converter(settings=self.settings) 
         self.mqtt_clients = mqtt_clients
+        self.report_dict = report_dict
 
     def ping_callback(self, msg):
         self._ros2_to_mqtt(ros_topic='/ping', msg=msg)
@@ -50,11 +52,16 @@ class UpStream():
         mqtt_msg, count = self.converter.convert_to_mqtt_pack(ros_topic=ros_topic, trace_id=trace_id, data=data)
         if mqtt_msg:
             self.logger.sys_log.info(f"ROS => MQTT : {ros_topic} => {mqtt_msg.topic}, 消息内容: {data}")
-            for _ in range(count):
-                import asyncio
-                asyncio.run(self.async_all_publish(mqtt_msg))
-                # self._local_publish(msg=mqtt_msg)
-                # self._cloud_publish(msg=mqtt_msg)
+            import asyncio
+            asyncio.run(self.async_all_publish(mqtt_msg))
+            if count > 1:
+                self.report_dict.add(key=trace_id, max_count=count, value=mqtt_msg)
+
+    def retry_send_to(self, mqtt_msg: MqttMsgReq):
+        self.logger.sys_log.info(f"ROS => MQTT [RETRY] :  => {mqtt_msg.topic}, 消息内容: {mqtt_msg.msg}")
+        import asyncio
+        asyncio.run(self.async_all_publish(mqtt_msg))
+
 
 
     def _local_publish(self, msg: MqttMsgReq):

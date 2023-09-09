@@ -57,7 +57,10 @@ mqtt_2_ros_topic_map = {
     'ctrl': [CmdType.ctrl.value, '/ctrl', False],
 
     # 心跳响应指令
-    'pong': [CmdType.pong.value, '/pong', False]
+    'pong': [CmdType.pong.value, '/pong', False],
+
+    # 任务报告回执
+    'task_report_receipt': [CmdType.task_report_receipt.value, '/task_report_receipt', False]
 }
 
 class Converter():
