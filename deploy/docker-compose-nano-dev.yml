@@ -8,8 +8,6 @@ services:
       context: .
       dockerfile: nano.dev.dockerfile
     image: nano:dev
-    ports:
-      - 8001:8001
     restart: always
     volumes:
       - ./..:/root/workspaces/src
