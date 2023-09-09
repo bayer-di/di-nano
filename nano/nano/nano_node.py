@@ -60,7 +60,7 @@ class NanoNode(Node):
         self.node_start()
         self.mqtt_start()
 
-        self.mock_init()
+        # self.mock_init()
 
         self.logger.sys_log.info(f"Startup with {self.conf.environment}!")
 
