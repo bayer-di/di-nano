@@ -61,7 +61,7 @@ class NanoNode(Node):
 
         self.logger = Logger(settings=self.conf)
 
-        self.report_dict = ReportOrderedDict()
+        self.report_dict = ReportOrderedDict(logger=self.logger)
 
         self.node_start()
         self.mqtt_start()

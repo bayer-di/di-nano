@@ -7,6 +7,9 @@
 from collections import OrderedDict
 from threading import RLock, Thread, Timer
 
+from ..common.logger import Logger
+
+
 class ReportItem:
     def __init__(self, report: any, max_count: int):
         self.report = report
@@ -17,7 +20,8 @@ class ReportItem:
 
 class ReportOrderedDict():
     
-    def __init__(self):
+    def __init__(self, logger: Logger):
+        self.logger = logger
         self.cache = OrderedDict()
         self.lock = RLock()
 
@@ -28,8 +32,12 @@ class ReportOrderedDict():
 
 
     def remove(self, key:str):
+        self._remove(key=key, trigger='ack')
+
+    def _remove(self, key:str, trigger: str):
         with self.lock:
             if key in self.cache:
+                self.logger.sys_log.info(f'{trigger} remove-> {key}')
                 del self.cache[key]
 
 
@@ -42,10 +50,9 @@ class ReportOrderedDict():
         with self.lock:
             items = list(self.cache.items())
             for key, obj in items:
-                # print(obj.report + " " + str(obj.counter))
+                self.logger.sys_log.info(str(obj.counter) + " " + key)
                 if obj.counter >= obj.max_count:
-                    # print(f'max remove-> {key}')
-                    self.remove(key)
+                    self._remove(key=key, trigger='max')
                 else:
                     obj.counter += 1
                     callback(obj.report)
