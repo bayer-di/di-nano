@@ -14,7 +14,7 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
 
-    def_conf_path = f"{get_package_share_directory('nano')}/nano-002.yaml"
+    def_conf_path = f"{get_package_share_directory('nano')}/nano.yaml"
     ld = LaunchDescription()
 
     condition = IfCondition(LaunchConfiguration('start'))
