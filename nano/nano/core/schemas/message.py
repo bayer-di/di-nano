@@ -68,6 +68,7 @@ class AgvUpMsg(BaseModel):
     device_no: str
     msg_type: str
     ts: int
+    label: str
     data: object
 
 

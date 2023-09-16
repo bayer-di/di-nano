@@ -71,7 +71,7 @@ class Converter():
 
     def _topic_params(self):
         env_prefix = 'test' if self.settings.environment != 'production' else 'prod'
-        return self.settings.name, self.settings.device_no, env_prefix
+        return self.settings.name, self.settings.device_no, self.settings.task_label, env_prefix
 
     def convert_to_ros_pack(self, mqtt_topic: str, data: any) -> any:  # type: ignore
         if mqtt_topic:
@@ -88,9 +88,13 @@ class Converter():
             if d:
                 msg_type = d[0]
                 topic = d[1]
-                name, device_no, env_prefix = self._topic_params()
+                name, device_no, task_label, env_prefix = self._topic_params()
                 mqtt_topic = f"/{name}/{env_prefix}/up/{device_no}/{topic}"
                 # TODO: 根据消息构建数据
-                agv_up_msg = AgvUpMsg(trace_id=trace_id, device_no=device_no, msg_type=msg_type, data=data,
+                agv_up_msg = AgvUpMsg(trace_id=trace_id, 
+                                      device_no=device_no, 
+                                      label=task_label,
+                                      msg_type=msg_type, 
+                                      data=data, 
                                       ts=int(time.time() * 1000))
                 return MqttMsgReq(topic=mqtt_topic, msg=json.dumps(agv_up_msg.dict())), d[2]

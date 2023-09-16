@@ -146,7 +146,7 @@ class NanoNode(Node):
                     "password": mqtt_info.password,
                     "online_topic": f"/{topic_prefix}/{env_prefix}/up/{device_no}/device_online",
                     "online_body": json.dumps(
-                        {'client_id': device_no, 'msg_type': 'device_online', 'data': task_label}),
+                        {'client_id': device_no, 'msg_type': 'device_online', 'data': task_label, 'label': task_label}),
                     "keepalived": 10
                 },
                 logger=self.logger)
