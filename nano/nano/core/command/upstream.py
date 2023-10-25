@@ -41,6 +41,9 @@ class UpStream():
     def sub_task_report_callback(self, msg):
         self._ros2_to_mqtt(ros_topic='/task/sub_task_report', msg=msg)
 
+    def res_yield_calculate_callback(self, msg):
+        self._ros2_to_mqtt(ros_topic='/res_yield_calculate', msg=msg)
+
     def _ros2_to_mqtt(self, ros_topic: str, msg: any):  # type: ignore
         """ros msg 转成 Mqtt msg 转发到 mqtt server"""
         msg_dict = message_to_ordereddict(msg)
