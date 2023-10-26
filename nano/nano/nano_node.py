@@ -98,8 +98,8 @@ class NanoNode(Node):
         self.cache_subscribers['/task/sub_task_report'] = self.create_subscription(String, '/task/sub_task_report',
                                                                                    self.up_stream.sub_task_report_callback,
                                                                                    qos_profile=self.qos)
-        self.cache_subscribers['/res_yield_calculate'] = self.create_subscription(String, '/res_yield_calculate',
-                                                                                   self.up_stream.res_yield_calculate_callback,
+        self.cache_subscribers['/res_yield_calculated'] = self.create_subscription(String, '/res_yield_calculated',
+                                                                                   self.up_stream.res_yield_calculated_callback,
                                                                                    qos_profile=self.qos)
         
 

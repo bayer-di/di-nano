@@ -35,7 +35,7 @@ ros_2_mqtt_topic_map = {
     '/task/total_task_report': [MessageType.total_task_report.value, 'total_task_report', 3],
 
     # 产量检测
-    '/res_yield_calculate': [MessageType.res_yield_calculate.value, 'res_yield_calculate', 3]
+    '/res_yield_calculated': [MessageType.res_yield_calculated.value, 'res_yield_calculated', 3]
 
 }
 

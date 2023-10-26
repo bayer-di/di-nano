@@ -35,7 +35,7 @@ class MessageType(Enum):
     sub_task_report = 'sub_task_report'
 
     # 结果: 产量检测
-    res_yield_calculate = 'res_yield_calculate'
+    res_yield_calculated = 'res_yield_calculated'
 
     # ... TODO: 新增业务类型
 
