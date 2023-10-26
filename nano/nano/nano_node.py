@@ -18,6 +18,7 @@ from functools import partial
 from rclpy.node import Node
 from rclpy.qos import qos_profile_services_default
 from std_msgs.msg import String
+from ai_msgs.msg import AiRes
 
 from .core.command.downstream import DownStream
 from .core.command.total_task_report_queue import ReportOrderedDict
@@ -98,7 +99,7 @@ class NanoNode(Node):
         self.cache_subscribers['/task/sub_task_report'] = self.create_subscription(String, '/task/sub_task_report',
                                                                                    self.up_stream.sub_task_report_callback,
                                                                                    qos_profile=self.qos)
-        self.cache_subscribers['/res_yield_calculated'] = self.create_subscription(String, '/res_yield_calculated',
+        self.cache_subscribers['/res_yield_calculated'] = self.create_subscription(AiRes, '/res_yield_calculated',
                                                                                    self.up_stream.res_yield_calculated_callback,
                                                                                    qos_profile=self.qos)
         
