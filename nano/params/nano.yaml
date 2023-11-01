@@ -4,12 +4,14 @@ version: 1.0.0
 device_no: test # 设备编号
 task_label: patrol # 业务LABEL
 environment: development # production or development
-mqtt: 
+mqtt:
+  # 调度通信 MQTT SERVER
   local:
     host: 127.0.0.1
     port: 1883
     username: ''
     password: ''
+  # AGV结果返回 MQTT SERVER
   cloud:
     host: ''
     port: ''

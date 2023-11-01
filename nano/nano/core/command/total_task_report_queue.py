@@ -11,10 +11,11 @@ from ..common.logger import Logger
 
 
 class ReportItem:
-    def __init__(self, report: any, max_count: int):
+    def __init__(self, report: any, max_count: int, platform: str):
         self.report = report
         self.max_count = max_count
         self.counter = 0
+        self.platform = platform
 
 
 class ReportOrderedDict():
@@ -24,10 +25,10 @@ class ReportOrderedDict():
         self.cache = OrderedDict()
         self.lock = RLock()
 
-    def add(self, key: str, max_count: int, value: any):
+    def add(self, key: str, max_count: int, platform: str, value: any):
         with self.lock:
             if key not in self.cache:
-                self.cache[key] = ReportItem(value, max_count)
+                self.cache[key] = ReportItem(value, max_count, platform)
 
     def remove(self, key: str):
         self._remove(key=key, trigger='ack')
@@ -51,4 +52,4 @@ class ReportOrderedDict():
                     self._remove(key=key, trigger='max')
                 else:
                     obj.counter += 1
-                    callback(obj.report)
+                    callback(obj.report, obj.platform)

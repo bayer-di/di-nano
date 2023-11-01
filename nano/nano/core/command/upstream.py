@@ -49,18 +49,18 @@ class UpStream():
         msg_dict = message_to_ordereddict(msg)
         trace_id = msg_dict['trace_id'] if 'trace_id' in msg_dict else f'{uuid4()}'
         data = json.dumps(msg_dict)
-        mqtt_msg, count = self.converter.convert_to_mqtt_pack(ros_topic=ros_topic, trace_id=trace_id, data=data)
+        mqtt_msg, count, platform = self.converter.convert_to_mqtt_pack(ros_topic=ros_topic, trace_id=trace_id, data=data)
         if mqtt_msg:
-            self.logger.sys_log.info(f"ROS => MQTT : {ros_topic} => {mqtt_msg.topic}, 消息内容: {mqtt_msg.msg}")
+            self.logger.sys_log.info(f"ROS => MQTT {platform}: {ros_topic} => {mqtt_msg.topic}, 消息内容: {mqtt_msg.msg}")
             import asyncio
-            asyncio.run(self.async_all_publish(mqtt_msg))
+            asyncio.run(self.async_all_publish(msg=mqtt_msg, platform=platform))
             if count > 1:
-                self.report_dict.add(key=trace_id, max_count=count, value=mqtt_msg)
+                self.report_dict.add(key=trace_id, max_count=count, platform=platform, value=mqtt_msg)
 
-    def retry_send_to(self, mqtt_msg: MqttMsgReq):
-        self.logger.sys_log.info(f"RETRY => MQTT : {mqtt_msg.topic}, 消息内容: {mqtt_msg.msg}")
+    def retry_send_to(self, mqtt_msg: MqttMsgReq, platform:str):
+        self.logger.sys_log.info(f"RETRY => MQTT {platform}: {mqtt_msg.topic}, 消息内容: {mqtt_msg.msg}")
         import asyncio
-        asyncio.run(self.async_all_publish(mqtt_msg))
+        asyncio.run(self.async_all_publish(msg=mqtt_msg, platform=platform))
 
     def _local_publish(self, msg: MqttMsgReq):
         """发送本地 MQTT"""
@@ -90,7 +90,14 @@ class UpStream():
             else:
                 self.logger.sys_log.debug(f"MQTT客户端类型 {client_type}, 客户端为空, 发送消息 {msg.dict()}")
 
-    async def async_all_publish(self, msg: MqttMsgReq):
+    async def async_all_publish(self, msg: MqttMsgReq, platform: str):
         """异步开启发送"""
-        self._local_publish(msg=msg)
-        self._cloud_publish(msg=msg)
+        if platform == MqttClientType.ALL.value:
+            self._local_publish(msg=msg)
+            self._cloud_publish(msg=msg)
+        
+        if platform == MqttClientType.CLOUD.value:
+            self._cloud_publish(msg=msg)
+
+        if platform == MqttClientType.LOCAL.value:
+            self._local_publish(msg=msg)

@@ -85,6 +85,7 @@ class MqttClientType(Enum):
     """MQTT客户端类型枚举"""
     LOCAL = 'local'
     CLOUD = 'cloud'
+    ALL = 'all'
 
 
 class MqttMsgReq(BaseModel):

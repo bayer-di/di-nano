@@ -8,34 +8,34 @@ import json
 import time
 
 from ..common.config import Settings
-from ..schemas.message import AgvUpMsg, MessageType, CmdType, MqttMsgReq
+from ..schemas.message import AgvUpMsg, MessageType, CmdType, MqttMsgReq, MqttClientType
 
 """
-ros to mqtt topic 映射, 定制好后不会再变化 {ros_topic: [mqtt_attr, mqtt_topic, 需要多次发送的次数]}
+ros to mqtt topic 映射, 定制好后不会再变化 {ros_topic: [mqtt_attr, mqtt_topic, 需要多次发送的次数, 多端发送]}
 """
 ros_2_mqtt_topic_map = {
     # 心跳
-    '/ping': [MessageType.ping.value, 'ping', 1],
+    '/ping': [MessageType.ping.value, 'ping', 1, MqttClientType.LOCAL.value],
 
-    '/cmd_ack': [MessageType.cmd_ack.value, 'cmd_ack', 1],
+    '/cmd_ack': [MessageType.cmd_ack.value, 'cmd_ack', 1, MqttClientType.LOCAL.value],
 
     # agv 状态 & 电量
-    '/robo_status': [MessageType.robo_status.value, 'robo_status', 1],
+    '/robo_status': [MessageType.robo_status.value, 'robo_status', 1, MqttClientType.LOCAL.value],
 
     # agv 电量
-    '/battery_info': [MessageType.battery_info.value, 'battery_info', 1],
+    '/battery_info': [MessageType.battery_info.value, 'battery_info', 1, MqttClientType.LOCAL.value],
 
     # agv 故障
-    '/robo_faults': [MessageType.robo_faults.value, 'robo_faults', 1],
+    '/robo_faults': [MessageType.robo_faults.value, 'robo_faults', 1, MqttClientType.LOCAL.value],
 
     # 子任务
-    '/task/sub_task_report': [MessageType.sub_task_report.value, 'sub_task_report', 1],
+    '/task/sub_task_report': [MessageType.sub_task_report.value, 'sub_task_report', 1, MqttClientType.LOCAL.value],
 
     # 总任务 
-    '/task/total_task_report': [MessageType.total_task_report.value, 'total_task_report', 3],
+    '/task/total_task_report': [MessageType.total_task_report.value, 'total_task_report', 3, MqttClientType.LOCAL.value],
 
     # 产量检测
-    '/res_yield_calculated': [MessageType.res_yield_calculated.value, 'res_yield_calculated', 3]
+    '/res_yield_calculated': [MessageType.res_yield_calculated.value, 'res_yield_calculated', 3, MqttClientType.CLOUD.value]
 
 }
 
@@ -97,4 +97,4 @@ class Converter():
                                       msg_type=msg_type, 
                                       data=data, 
                                       ts=int(time.time() * 1000))
-                return MqttMsgReq(topic=mqtt_topic, msg=json.dumps(agv_up_msg.dict())), d[2]
+                return MqttMsgReq(topic=mqtt_topic, msg=json.dumps(agv_up_msg.dict())), d[2], d[3]

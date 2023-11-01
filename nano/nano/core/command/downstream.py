@@ -38,7 +38,7 @@ class DownStream():
 
     def _cmd_ack(self, client: Client, json_data: dict):
         if 'trace_id' in json_data:
-            cmd_ack_msg, _ = self.converter.convert_to_mqtt_pack(ros_topic='/cmd_ack', trace_id=json_data['trace_id'],
+            cmd_ack_msg, _, platform = self.converter.convert_to_mqtt_pack(ros_topic='/cmd_ack', trace_id=json_data['trace_id'],
                                                                  data=json.dumps(json_data))
             if cmd_ack_msg:
                 client.publish(topic=cmd_ack_msg.topic, payload=cmd_ack_msg.msg, qos=cmd_ack_msg.qos)  # type: ignore
