@@ -6,7 +6,7 @@ services:
     container_name: nano_dev
     build:
       context: .
-      dockerfile: nano.dev.dockerfile
+      dockerfile: nano.emqx.dockerfile
     image: nano:dev
     restart: always
     volumes:

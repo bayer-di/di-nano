@@ -108,15 +108,16 @@ class NanoNode(Node):
         self.timer_task_report = self.create_timer(1, partial(self.scan_task_report_callback))
 
     def mqtt_init(self):
-        self.timer_mqtt_start = self.create_timer(30, partial(self.mqtt_start_callback))
+        self.timer_mqtt_start = self.create_timer(60, partial(self.mqtt_start_callback))
 
     def scan_task_report_callback(self):
         self.report_dict.process(callback=self.up_stream.retry_send_to)
 
     def mqtt_start_callback(self):
+        
         """MQTT初始化"""
+
         if len(self.mqtt_clients) > 0:
-            self.logger.sys_log.info(f"MQTT 客户端已初始化... 不再处理.....")
             return
         
         mec = self.conf.mqtt
