@@ -11,6 +11,7 @@
 
 import json
 import rclpy
+import sys
 from agv_msgs.msg import BatteryInfoMsg
 from ament_index_python.packages import get_package_share_directory
 from device_msgs.msg import RoboStatus, ErrorStatus
@@ -59,8 +60,6 @@ class NanoNode(Node):
         self.report_dict = ReportOrderedDict(logger=self.logger)
 
         self.node_start()
-        self.mqtt_start()
-
         # self.mock_init()
 
         self.logger.sys_log.info(f"Startup with {self.conf.environment}!")
@@ -69,6 +68,7 @@ class NanoNode(Node):
         self.ros_pub_init()
         self.ros_sub_init()
         self.report_timer_init()
+        self.mqtt_init()
 
     def ros_pub_init(self):
         """ros topic 的 发布缓存"""
@@ -107,20 +107,35 @@ class NanoNode(Node):
     def report_timer_init(self):
         self.timer_task_report = self.create_timer(1, partial(self.scan_task_report_callback))
 
+    def mqtt_init(self):
+        self.timer_mqtt_start = self.create_timer(30, partial(self.mqtt_start_callback))
+
     def scan_task_report_callback(self):
         self.report_dict.process(callback=self.up_stream.retry_send_to)
 
-    def mqtt_start(self):
+    def mqtt_start_callback(self):
         """MQTT初始化"""
+        if len(self.mqtt_clients) > 0:
+            self.logger.sys_log.info(f"MQTT 客户端已初始化... 不再处理.....")
+            return
+        
         mec = self.conf.mqtt
         client_id = f"{self.conf.device_no}"
-        mqttv1 = self._start_mqtt_client(mqtt_info=mec.local, client_id=client_id)
-        if mqttv1:
-            self.mqtt_clients[MqttClientType.LOCAL.value] = mqttv1
+        
+        try:
+            mqttv1 = self._start_mqtt_client(mqtt_info=mec.local, client_id=client_id)
+            if mqttv1:
+                self.mqtt_clients[MqttClientType.LOCAL.value] = mqttv1
+    
+            mqttv2 = self._start_mqtt_client(mqtt_info=mec.cloud, client_id=client_id)
+            if mqttv2:
+                self.mqtt_clients[MqttClientType.CLOUD.value] = mqttv2
+            
+        except Exception:
+            print(sys.exc_info())
+            self.logger.sys_log.error(f"开启MQTT错误 清空链接Clients, 后续重连即将开启: {sys.exc_info()}")
+            self.mqtt_clients = {}
 
-        mqttv2 = self._start_mqtt_client(mqtt_info=mec.cloud, client_id=client_id)
-        if mqttv2:
-            self.mqtt_clients[MqttClientType.CLOUD.value] = mqttv2
 
     def _start_mqtt_client(self, mqtt_info: MqttInfo, client_id: str):
         """MQTT初始化"""
